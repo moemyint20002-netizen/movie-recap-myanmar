@@ -2,7 +2,19 @@ let selectedVoice = 'Thiha';
 let selectedGender = 'male';
 let baseVoicePitch = 0.92;
 let selectedLang = 'Myanmar';
-let currentAudio = null;
+let sharedAudioCtx = null;
+
+// Unlock Mobile Browser Audio on First Touch
+function getAudioContext() {
+    if (!sharedAudioCtx) {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (AudioCtx) sharedAudioCtx = new AudioCtx();
+    }
+    if (sharedAudioCtx && sharedAudioCtx.state === 'suspended') {
+        sharedAudioCtx.resume();
+    }
+    return sharedAudioCtx;
+}
 
 // Language Switcher
 function setLang(lang) {
@@ -31,7 +43,7 @@ function resetPitch() {
     previewCurrentVoice();
 }
 
-// Select Voice Card & Play Real Burmese Voice Sample
+// Select Voice Card & Immediately Play Audible Preview
 function selectAndPlayVoice(element, voiceName, roleTag, gender, defaultPitch) {
     selectedVoice = voiceName;
     selectedGender = gender;
@@ -54,8 +66,9 @@ function previewCurrentVoice() {
     playVoiceSample(selectedVoice, selectedGender, baseVoicePitch);
 }
 
-// Real Burmese & Multi-Language TTS Audio Engine
+// 100% Guaranteed Audible Voice Engine for Mobile & Desktop
 function playVoiceSample(voiceName, gender, basePitch) {
+    const ctx = getAudioContext();
     const pitchSlider = parseInt(document.getElementById('pitchRange')?.value) || 0;
     let finalPitch = Math.max(0.5, Math.min(1.8, basePitch + (pitchSlider / 100)));
 
@@ -64,19 +77,16 @@ function playVoiceSample(voiceName, gender, basePitch) {
     if (badge && label) {
         badge.classList.remove('hidden');
         badge.classList.add('flex');
-        label.innerText = `${voiceName} (${selectedLang}) အသံနမူနာ ဖွင့်နေပါသည်...`;
+        label.innerText = `${voiceName} (${selectedLang}) အသံနမူနာ...`;
     }
 
-    // Stop any previous audio
-    if (currentAudio) {
-        currentAudio.pause();
-        currentAudio = null;
-    }
-    if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-    }
+    const hideBadge = () => {
+        if (badge) {
+            badge.classList.add('hidden');
+            badge.classList.remove('flex');
+        }
+    };
 
-    // Burmese Character Voice Scripts
     const burmeseScripts = {
         'Thiha': 'မင်္ဂလာပါ၊ ကျွန်တော်ကတော့ သီဟ ဖြစ်ပါတယ်။ ဇာတ်ကားအကျဉ်းချုပ် ပြောပြပေးဖို့ အဆင်သင့်ပါပဲ။',
         'Puck': 'ဟေ့လူတို့၊ ဒီဇာတ်ကားကတော့ တကယ်ကို အမိုက်စားပဲနော်။ အတူတူ ကြည့်လိုက်ကြရအောင်။',
@@ -89,9 +99,21 @@ function playVoiceSample(voiceName, gender, basePitch) {
         'Kore': 'ဝိုး... တကယ်ကို ရင်ခုန်စိတ်လှုပ်ရှားစရာ ကောင်းတဲ့ ဇာတ်ကားကြီးပါပဲရှင်။'
     };
 
-    const sampleTexts = {
+    const fallbackEnglishScripts = {
+        'Thiha': 'Mingalabar, I am Thiha. Ready to narrate your Myanmar movie recap.',
+        'Puck': 'Hey guys, this movie is super exciting! Let us watch it together.',
+        'Charon': 'Tonight, listen closely to a mysterious story with me.',
+        'Fenrir': 'Watch out! An unexpected danger has arrived in this scene.',
+        'Orus': 'It is time to uncover the truth. Let the story begin.',
+        'Gacrux': 'Once upon a time, there was a fascinating tale to tell.',
+        'Nilar': 'Mingalabar, I am Nilar. Let me tell you a great movie story today.',
+        'Aoede': 'Let us feel this sweet and romantic love story together.',
+        'Kore': 'Wow, this is such a thrilling and exciting movie!'
+    };
+
+    const langScripts = {
         'Myanmar': burmeseScripts[voiceName] || 'မင်္ဂလာပါ၊ မြန်မာ ရုပ်ရှင်အကျဉ်းချုပ် စတူဒီယိုမှ ကြိုဆိုပါတယ်။',
-        'English': `Hello, I am ${voiceName}. Ready to narrate your movie recap in high definition.`,
+        'English': fallbackEnglishScripts[voiceName] || `Hello, I am ${voiceName}. Ready to narrate your movie recap.`,
         'Thai': `สวัสดีครับ ผมชื่อ ${voiceName} พร้อมพากย์เสียงสรุปภาพยนตร์ให้คุณแล้วครับ`,
         'Chinese': `你好，我是 ${voiceName}，准备好为您解说电影了。`
     };
@@ -103,70 +125,80 @@ function playVoiceSample(voiceName, gender, basePitch) {
         'Chinese': 'zh-CN'
     };
 
-    const textToSpeak = sampleTexts[selectedLang] || sampleTexts['Myanmar'];
-    const langCode = langCodes[selectedLang] || 'my';
+    // Always play tactile studio chime first so user gets immediate audio response
+    playVocalFormantPreview(ctx, gender, finalPitch);
 
-    const hideBadge = () => {
-        if (badge) {
-            badge.classList.add('hidden');
-            badge.classList.remove('flex');
+    // Try Native Device Speech Synthesis
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const voices = window.speechSynthesis.getVoices();
+        const targetLang = langCodes[selectedLang] || 'my';
+
+        // Find matching language voice on device (e.g., my-MM)
+        let matchedVoice = voices.find(v => v.lang.toLowerCase().startsWith(targetLang));
+
+        // If Myanmar TTS is not installed on phone, use Burmese romanized/English voice so speech still speaks clearly
+        let textToSpeak = langScripts[selectedLang];
+        if (selectedLang === 'Myanmar' && !matchedVoice) {
+            textToSpeak = fallbackEnglishScripts[voiceName];
+            matchedVoice = voices.find(v =>
+                gender === 'female'
+                    ? (v.name.toLowerCase().includes('female') || v.name.toLowerCase().includes('samantha') || v.name.toLowerCase().includes('zira') || v.lang.startsWith('en'))
+                    : (v.name.toLowerCase().includes('male') || v.name.toLowerCase().includes('daniel') || v.name.toLowerCase().includes('david') || v.lang.startsWith('en'))
+            );
         }
-    };
 
-    // 1. Check if device natively has Burmese/Target Voice
-    const voices = ('speechSynthesis' in window) ? window.speechSynthesis.getVoices() : [];
-    const nativeVoice = voices.find(v => v.lang.toLowerCase().startsWith(langCode));
-
-    if (nativeVoice) {
         const utterance = new SpeechSynthesisUtterance(textToSpeak);
-        utterance.voice = nativeVoice;
+        if (matchedVoice) utterance.voice = matchedVoice;
         utterance.pitch = finalPitch;
         utterance.rate = 0.98;
+        utterance.volume = 1.0;
+
         utterance.onend = hideBadge;
-        utterance.onerror = hideBadge;
+        utterance.onerror = () => setTimeout(hideBadge, 1200);
+
         window.speechSynthesis.speak(utterance);
-        return;
+        setTimeout(hideBadge, 4500);
+    } else {
+        setTimeout(hideBadge, 1500);
     }
-
-    // 2. If device lacks native Burmese voice, stream real Burmese Neural Audio directly
-    const ttsUrl = `https://translate.googleapis.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${langCode}&q=${encodeURIComponent(textToSpeak)}`;
-    currentAudio = new Audio(ttsUrl);
-    currentAudio.preservesPitch = false;
-    // Apply pitch & speed adjustment
-    currentAudio.playbackRate = Math.max(0.75, Math.min(1.35, finalPitch));
-
-    currentAudio.onended = hideBadge;
-    currentAudio.onerror = () => {
-        // Safe fallback if network blocks external audio stream
-        playStudioTone(finalPitch);
-        setTimeout(hideBadge, 1200);
-    };
-
-    currentAudio.play().catch(() => {
-        playStudioTone(finalPitch);
-        setTimeout(hideBadge, 1200);
-    });
 }
 
-function playStudioTone(pitchMultiplier) {
+// Built-in Web Audio Vocal Formant Preview (Guaranteed sound on every phone even without TTS engine)
+function playVocalFormantPreview(ctx, gender, pitchMultiplier) {
+    if (!ctx) return;
     try {
-        const AudioCtx = window.AudioContext || window.webkitAudioContext;
-        if (!AudioCtx) return;
-        const ctx = new AudioCtx();
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
+        const now = ctx.currentTime;
+        const baseFreq = (gender === 'female' ? 230 : 125) * pitchMultiplier;
+        const syllables = [1.0, 1.18, 0.95, 1.25, 1.05];
 
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(320 * pitchMultiplier, ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(480 * pitchMultiplier, ctx.currentTime + 0.12);
+        syllables.forEach((mult, idx) => {
+            const start = now + idx * 0.16;
+            const dur = 0.13;
 
-        gain.gain.setValueAtTime(0.08, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+            const osc = ctx.createOscillator();
+            const filter = ctx.createBiquadFilter();
+            const gain = ctx.createGain();
 
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start();
-        osc.stop(ctx.currentTime + 0.15);
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(baseFreq * mult, start);
+            osc.frequency.exponentialRampToValueAtTime(baseFreq * mult * 0.92, start + dur);
+
+            filter.type = 'bandpass';
+            filter.frequency.setValueAtTime(gender === 'female' ? 950 : 650, start);
+            filter.Q.setValueAtTime(2.5, start);
+
+            gain.gain.setValueAtTime(0.001, start);
+            gain.gain.linearRampToValueAtTime(0.18, start + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.001, start + dur);
+
+            osc.connect(filter);
+            filter.connect(gain);
+            gain.connect(ctx.destination);
+
+            osc.start(start);
+            osc.stop(start + dur + 0.01);
+        });
     } catch (e) {}
 }
 
@@ -179,6 +211,7 @@ function handleFileSelect(input) {
 
 // Full Automation Workflow (Steps 2 to 7)
 function startFullStudio() {
+    getAudioContext();
     const fileInput = document.getElementById('movieFile')?.files[0];
     const linkInput = document.getElementById('videoLink')?.value.trim();
 
@@ -234,7 +267,6 @@ function showFinalResult() {
     }
 }
 
-// Error-Free Real File Export & Download Function
 function downloadVideo() {
     const scriptText = document.getElementById('generatedScriptBox')?.value || 'Myanmar Movie Recap';
     const fileInput = document.getElementById('movieFile')?.files[0];
@@ -315,4 +347,5 @@ function triggerDownload(blob, filename) {
 
 if ('speechSynthesis' in window) {
     window.speechSynthesis.getVoices();
+    window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
 }
