@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Myanmar Movie Recap Studio - Gemini Voice Edition</title>
+    <title>AI Myanmar Movie Recap Studio - Exact Sync Edition</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -15,34 +15,21 @@
             -webkit-tap-highlight-color: transparent;
         }
         .glass-card {
-            background: rgba(17, 24, 39, 0.78);
+            background: rgba(17, 24, 39, 0.85);
             backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.6);
         }
         .voice-card-active {
-            background: linear-gradient(145deg, rgba(59, 130, 246, 0.3), rgba(147, 51, 234, 0.3)) !important;
+            background: linear-gradient(145deg, rgba(59, 130, 246, 0.35), rgba(147, 51, 234, 0.35)) !important;
             border: 1.5px solid #60a5fa !important;
             box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
             transform: translateY(-2px);
         }
         button { cursor: pointer; touch-action: manipulation; }
-        .wave-bar {
-            width: 3px; height: 12px; background: #60a5fa; border-radius: 99px;
-            animation: soundWave 0.6s infinite ease-in-out alternate;
-        }
-        .wave-bar:nth-child(2) { animation-delay: 0.2s; height: 18px; }
-        .wave-bar:nth-child(3) { animation-delay: 0.4s; height: 10px; }
-        @keyframes soundWave { 0% { transform: scaleY(0.4); } 100% { transform: scaleY(1.3); } }
-        input[type=range]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            height: 20px; width: 20px; border-radius: 50%;
-            background: #38bdf8; cursor: pointer; box-shadow: 0 0 10px #38bdf8;
-        }
     </style>
 </head>
-<body class="text-slate-100 pb-16">
+<body class="text-slate-100 pb-20">
 
     <!-- Navbar -->
     <nav class="sticky top-0 z-50 glass-card border-b border-slate-800/80 px-5 py-3.5">
@@ -55,377 +42,446 @@
                     <h1 class="text-base md:text-lg font-extrabold bg-gradient-to-r from-amber-300 via-rose-400 to-purple-400 bg-clip-text text-transparent">
                         AI Myanmar Movie Recap Studio
                     </h1>
-                    <p class="text-[11px] text-slate-400">Powered by Gemini Native Audio & Script AI</p>
+                    <p class="text-[11px] text-slate-400">Scene + Voice + Subtitle 100% Exact Sync</p>
                 </div>
             </div>
-            <span class="px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1.5">
-                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span> Gemini Live
-            </span>
+            <span class="px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">Exact Sync Engine</span>
         </div>
     </nav>
 
     <div class="max-w-3xl mx-auto px-4 mt-6 space-y-5">
 
-        <!-- STEP 1: Input -->
+        <!-- STEP 1: Upload Video & Movie Title -->
         <div class="glass-card rounded-2xl p-5 border-l-4 border-l-blue-500 space-y-3">
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div class="flex items-center space-x-3.5">
                     <div class="w-11 h-11 rounded-full bg-blue-600/20 border border-blue-500/50 text-blue-400 flex items-center justify-center font-extrabold text-lg shrink-0">1</div>
                     <div>
-                        <h2 class="font-bold text-base text-white">ဇာတ်ကားအချက်အလက် / ဗီဒီယို ထည့်ရန်</h2>
-                        <p class="text-xs text-slate-400">ဇာတ်ကားနာမည်၊ ဇာတ်လမ်းအကျဉ်း သို့မဟုတ် MP4 ဖိုင်ထည့်ပါ</p>
+                        <h2 class="font-bold text-base text-white">မူရင်း Movie Video (MP4) နှင့် ဇာတ်ကားနာမည် ထည့်ပါ</h2>
+                        <p class="text-xs text-slate-400">စာကြောင်းတစ်ကြောင်းချင်းစီအလိုက် ရုပ်၊ အသံ၊ စာတန်း ကွက်တိချိန်ညှိပေးပါမည်</p>
                     </div>
                 </div>
-                <label class="cursor-pointer bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-lg flex items-center justify-center gap-2 shrink-0">
+                <label class="cursor-pointer bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-lg flex items-center justify-center gap-2 shrink-0">
                     <i class="fa-solid fa-cloud-arrow-up"></i>
-                    <span id="fileLabel">ဖိုင်ရွေးချယ်မည် (MP4)</span>
+                    <span id="fileLabel">ဗီဒီယိုဖိုင် ရွေးချယ်မည် (MP4)</span>
                     <input type="file" id="movieFile" accept="video/*" class="hidden" onchange="handleFileSelect(this)">
                 </label>
             </div>
             <div class="flex flex-col sm:flex-row gap-2">
-                <input type="text" id="videoLink" placeholder="ဇာတ်ကားနာမည် သို့မဟုတ် ဇာတ်ကြောင်းအကျဉ်း ရေးထည့်ပါ (ဥပမာ- John Wick 4)..." class="flex-1 bg-slate-950/80 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-blue-500">
+                <input type="text" id="videoLink" placeholder="ဇာတ်ကားနာမည် သို့မဟုတ် ဇာတ်လမ်းအကျဉ်း (ဥပမာ- Squid Game Season 2)..." class="flex-1 bg-slate-950/80 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-blue-500">
                 <select id="platformPreset" class="bg-slate-950/80 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-300 focus:outline-none">
-                    <option value="tiktok">TikTok / Shorts (၁ မိနစ်)</option>
-                    <option value="youtube">YouTube (အရှည်)</option>
+                    <option value="tiktok">TikTok / Reels (9:16 Full Screen)</option>
+                    <option value="youtube">YouTube (16:9 Widescreen)</option>
                 </select>
             </div>
         </div>
 
-        <!-- SELECT DUBBING VOICES (Gemini Prebuilt Voices) -->
-        <div class="glass-card rounded-2xl p-5 border border-purple-500/30 space-y-5">
-            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3.5">
-                <div class="flex items-center space-x-2.5">
-                    <div class="w-8 h-8 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center">
-                        <i class="fa-solid fa-microphone-lines"></i>
-                    </div>
-                    <div>
-                        <h3 class="font-extrabold text-sm text-white uppercase">Select Dubbing Voices (Gemini AI)</h3>
-                        <p class="text-[11px] text-slate-400">အသံကတ်ကို နှိပ်လိုက်တာနဲ့ Gemini AI မှ သဘာဝလူသားအသံအစစ် ထွက်ပေါ်လာပါမည်</p>
-                    </div>
-                </div>
-                <div id="audioStatusBadge" class="hidden items-center space-x-2 bg-blue-500/20 border border-blue-500/40 px-3 py-1 rounded-full">
-                    <div class="flex items-center space-x-1"><span class="wave-bar"></span><span class="wave-bar"></span><span class="wave-bar"></span></div>
-                    <span id="playingVoiceLabel" class="text-[11px] font-bold text-blue-300">Playing...</span>
-                </div>
+        <!-- STEP 2: Dubbing Voice Selection -->
+        <div class="glass-card rounded-2xl p-5 border border-purple-500/30 space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <h3 class="font-extrabold text-sm text-white uppercase"><i class="fa-solid fa-microphone-lines text-purple-400 mr-2"></i>နောက်ခံပြောသံ ရွေးချယ်ပါ</h3>
+                <span id="playingVoiceLabel" class="text-[11px] text-sky-400 font-bold">Selected: Puck</span>
             </div>
 
-            <!-- Language Tabs -->
-            <div class="grid grid-cols-4 gap-2 bg-slate-950/90 p-1.5 rounded-xl border border-slate-800">
-                <button type="button" onclick="setLang('Myanmar')" id="langMyanmar" class="lang-btn py-2.5 rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 text-white text-xs font-bold shadow">Myanmar</button>
-                <button type="button" onclick="setLang('English')" id="langEnglish" class="lang-btn py-2.5 rounded-lg text-slate-400 hover:text-white text-xs font-bold transition">English</button>
-                <button type="button" onclick="setLang('Thai')" id="langThai" class="lang-btn py-2.5 rounded-lg text-slate-400 hover:text-white text-xs font-bold transition">Thai</button>
-                <button type="button" onclick="setLang('Chinese')" id="langChinese" class="lang-btn py-2.5 rounded-lg text-slate-400 hover:text-white text-xs font-bold transition">Chinese</button>
-            </div>
-
-            <!-- Pitch Control -->
-            <div class="bg-slate-950/90 p-4 rounded-xl border border-slate-800 space-y-2.5">
-                <div class="flex justify-between items-center">
-                    <span class="text-xs font-bold text-slate-200"><i class="fa-solid fa-sliders text-sky-400 mr-1.5"></i>Voice Pitch & Tone (အသံ ကြီး/သေး)</span>
-                    <div class="flex items-center space-x-2">
-                        <span id="pitchVal" class="bg-sky-500/20 border border-sky-500/40 text-sky-300 text-xs font-extrabold px-2.5 py-0.5 rounded-md">0</span>
-                        <button type="button" onclick="resetPitch()" class="text-[11px] bg-slate-800 hover:bg-slate-700 text-slate-300 px-2.5 py-1 rounded-md transition">
-                            <i class="fa-solid fa-rotate-left mr-1"></i>Reset
-                        </button>
-                    </div>
-                </div>
-                <input type="range" id="pitchRange" min="-50" max="50" value="0" oninput="document.getElementById('pitchVal').innerText=this.value" onchange="previewCurrentVoice()" class="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer">
-                <div class="flex justify-between text-[10px] text-slate-400 font-medium">
-                    <span>Low (-50 ယောက်ျားသံ ဩဩ)</span>
-                    <span>0 (မူရင်းအသံ)</span>
-                    <span>High (+50 မိန်းကလေးသံ စူးစူး)</span>
-                </div>
-            </div>
-
-            <!-- Male Voices (Gemini Native Voices) -->
-            <div class="space-y-2.5">
-                <p class="text-xs font-bold text-amber-400 flex items-center gap-1.5">
-                    <i class="fa-solid fa-user-tie"></i> ယောက်ျားလေး ဇာတ်ကောင်အသံ [Male Role]
-                </p>
-                <div class="grid grid-cols-3 gap-2.5">
-                    <button type="button" onclick="selectAndPlayVoice(this, 'Puck', 'Thiha (Upbeat)', 'male')" class="voice-btn voice-card-active bg-slate-900/90 border border-slate-800 p-3 rounded-xl text-center transition relative">
-                        <i class="fa-solid fa-volume-high text-[10px] text-sky-400 absolute top-2 right-2"></i>
-                        <div class="w-9 h-9 mx-auto mb-1.5 rounded-full bg-blue-500/20 flex items-center justify-center text-base">🧑🏻</div>
-                        <p class="text-xs font-bold text-white">Puck</p>
-                        <p class="text-[10px] text-sky-400 font-semibold">Upbeat Male</p>
-                    </button>
-
-                    <button type="button" onclick="selectAndPlayVoice(this, 'Charon', 'Narrator', 'male')" class="voice-btn bg-slate-900/90 border border-slate-800 p-3 rounded-xl text-center hover:border-slate-600 transition relative">
-                        <i class="fa-solid fa-volume-high text-[10px] text-slate-500 absolute top-2 right-2"></i>
-                        <div class="w-9 h-9 mx-auto mb-1.5 rounded-full bg-purple-500/20 flex items-center justify-center text-base">🧔🏻</div>
-                        <p class="text-xs font-bold text-white">Charon</p>
-                        <p class="text-[10px] text-slate-400">Narrator</p>
-                    </button>
-
-                    <button type="button" onclick="selectAndPlayVoice(this, 'Fenrir', 'Dramatic', 'male')" class="voice-btn bg-slate-900/90 border border-slate-800 p-3 rounded-xl text-center hover:border-slate-600 transition relative">
-                        <i class="fa-solid fa-volume-high text-[10px] text-slate-500 absolute top-2 right-2"></i>
-                        <div class="w-9 h-9 mx-auto mb-1.5 rounded-full bg-rose-500/20 flex items-center justify-center text-base">👨🏻‍🎤</div>
-                        <p class="text-xs font-bold text-white">Fenrir</p>
-                        <p class="text-[10px] text-slate-400">Dramatic</p>
-                    </button>
-
-                    <button type="button" onclick="selectAndPlayVoice(this, 'Orus', 'Firm', 'male')" class="voice-btn bg-slate-900/90 border border-slate-800 p-3 rounded-xl text-center hover:border-slate-600 transition relative">
-                        <i class="fa-solid fa-volume-high text-[10px] text-slate-500 absolute top-2 right-2"></i>
-                        <div class="w-9 h-9 mx-auto mb-1.5 rounded-full bg-emerald-500/20 flex items-center justify-center text-base">🕵🏻‍♂️</div>
-                        <p class="text-xs font-bold text-white">Orus</p>
-                        <p class="text-[10px] text-slate-400">Firm</p>
-                    </button>
-
-                    <button type="button" onclick="selectAndPlayVoice(this, 'Zephyr', 'Storyteller', 'male')" class="voice-btn bg-slate-900/90 border border-slate-800 p-3 rounded-xl text-center hover:border-slate-600 transition relative">
-                        <i class="fa-solid fa-volume-high text-[10px] text-slate-500 absolute top-2 right-2"></i>
-                        <div class="w-9 h-9 mx-auto mb-1.5 rounded-full bg-cyan-500/20 flex items-center justify-center text-base">🧙🏻‍♂️</div>
-                        <p class="text-xs font-bold text-white">Zephyr</p>
-                        <p class="text-[10px] text-slate-400">Storyteller</p>
-                    </button>
-
-                    <button type="button" onclick="selectAndPlayVoice(this, 'Alnilam', 'Deep Voice', 'male')" class="voice-btn bg-slate-900/90 border border-slate-800 p-3 rounded-xl text-center hover:border-slate-600 transition relative">
-                        <i class="fa-solid fa-volume-high text-[10px] text-slate-500 absolute top-2 right-2"></i>
-                        <div class="w-9 h-9 mx-auto mb-1.5 rounded-full bg-amber-500/20 flex items-center justify-center text-base">🎙️</div>
-                        <p class="text-xs font-bold text-white">Alnilam</p>
-                        <p class="text-[10px] text-slate-400">Deep</p>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Female Voices (Gemini Native Voices) -->
-            <div class="space-y-2.5 pt-2">
-                <p class="text-xs font-bold text-pink-400 flex items-center gap-1.5">
-                    <i class="fa-solid fa-user"></i> မိန်းကလေး ဇာတ်ကောင်အသံ [Female Role]
-                </p>
-                <div class="grid grid-cols-3 gap-2.5">
-                    <button type="button" onclick="selectAndPlayVoice(this, 'Aoede', 'Sweet & Soft', 'female')" class="voice-btn bg-slate-900/90 border border-slate-800 p-3 rounded-xl text-center hover:border-slate-600 transition relative">
-                        <i class="fa-solid fa-volume-high text-[10px] text-slate-500 absolute top-2 right-2"></i>
-                        <div class="w-9 h-9 mx-auto mb-1.5 rounded-full bg-pink-500/20 flex items-center justify-center text-base">👩🏻</div>
-                        <p class="text-xs font-bold text-white">Aoede</p>
-                        <p class="text-[10px] text-slate-400">Sweet & Soft</p>
-                    </button>
-
-                    <button type="button" onclick="selectAndPlayVoice(this, 'Kore', 'Energetic', 'female')" class="voice-btn bg-slate-900/90 border border-slate-800 p-3 rounded-xl text-center hover:border-slate-600 transition relative">
-                        <i class="fa-solid fa-volume-high text-[10px] text-slate-500 absolute top-2 right-2"></i>
-                        <div class="w-9 h-9 mx-auto mb-1.5 rounded-full bg-rose-500/20 flex items-center justify-center text-base">👧🏻</div>
-                        <p class="text-xs font-bold text-white">Kore</p>
-                        <p class="text-[10px] text-slate-400">Energetic</p>
-                    </button>
-
-                    <button type="button" onclick="selectAndPlayVoice(this, 'Leda', 'Youthful', 'female')" class="voice-btn bg-slate-900/90 border border-slate-800 p-3 rounded-xl text-center hover:border-slate-600 transition relative">
-                        <i class="fa-solid fa-volume-high text-[10px] text-slate-500 absolute top-2 right-2"></i>
-                        <div class="w-9 h-9 mx-auto mb-1.5 rounded-full bg-fuchsia-500/20 flex items-center justify-center text-base">👩🏻‍🎤</div>
-                        <p class="text-xs font-bold text-white">Leda</p>
-                        <p class="text-[10px] text-slate-400">Youthful</p>
-                    </button>
-                </div>
+            <div class="grid grid-cols-3 gap-2.5">
+                <button type="button" onclick="selectVoice(this, 'Puck')" class="voice-btn voice-card-active bg-slate-900/90 border border-slate-800 p-3 rounded-xl text-center">
+                    <div class="text-base mb-1">🧑🏻</div><p class="text-xs font-bold">Puck</p><p class="text-[10px] text-sky-400">Male Narrator</p>
+                </button>
+                <button type="button" onclick="selectVoice(this, 'Charon')" class="voice-btn bg-slate-900/90 border border-slate-800 p-3 rounded-xl text-center">
+                    <div class="text-base mb-1">🧔🏻</div><p class="text-xs font-bold">Charon</p><p class="text-[10px] text-slate-400">Deep Male</p>
+                </button>
+                <button type="button" onclick="selectVoice(this, 'Fenrir')" class="voice-btn bg-slate-900/90 border border-slate-800 p-3 rounded-xl text-center">
+                    <div class="text-base mb-1">👨🏻‍🎤</div><p class="text-xs font-bold">Fenrir</p><p class="text-[10px] text-slate-400">Dramatic</p>
+                </button>
+                <button type="button" onclick="selectVoice(this, 'Aoede')" class="voice-btn bg-slate-900/90 border border-slate-800 p-3 rounded-xl text-center">
+                    <div class="text-base mb-1">👩🏻</div><p class="text-xs font-bold">Aoede</p><p class="text-[10px] text-pink-400">Female Soft</p>
+                </button>
+                <button type="button" onclick="selectVoice(this, 'Kore')" class="voice-btn bg-slate-900/90 border border-slate-800 p-3 rounded-xl text-center">
+                    <div class="text-base mb-1">👧🏻</div><p class="text-xs font-bold">Kore</p><p class="text-[10px] text-pink-400">Female Energetic</p>
+                </button>
+                <button type="button" onclick="selectVoice(this, 'Leda')" class="voice-btn bg-slate-900/90 border border-slate-800 p-3 rounded-xl text-center">
+                    <div class="text-base mb-1">👩🏻‍🎤</div><p class="text-xs font-bold">Leda</p><p class="text-[10px] text-pink-400">Female Youthful</p>
+                </button>
             </div>
         </div>
 
-        <!-- Pipeline Status -->
-        <div class="space-y-2.5">
-            <div class="glass-card p-3.5 rounded-xl flex items-center justify-between">
-                <div class="flex items-center space-x-3">
-                    <div class="w-7 h-7 rounded-full bg-purple-500/20 text-purple-400 flex items-center justify-center font-bold text-xs">2</div>
-                    <span class="text-xs font-bold">Gemini AI Script Writing</span>
-                </div>
-                <span id="status2" class="text-[11px] bg-slate-800 text-slate-400 px-3 py-1 rounded-full font-semibold">Ready</span>
+        <!-- Pipeline Progress -->
+        <div class="glass-card p-4 rounded-2xl space-y-2.5">
+            <div class="flex justify-between text-xs font-bold">
+                <span id="progressText" class="text-slate-300">စတင်ရန် အဆင်သင့်ဖြစ်ပါပြီ</span>
+                <span id="progressPercent" class="text-sky-400">0%</span>
             </div>
-            <div class="glass-card p-3.5 rounded-xl flex items-center justify-between">
-                <div class="flex items-center space-x-3">
-                    <div class="w-7 h-7 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-xs">3</div>
-                    <span class="text-xs font-bold">Gemini Burmese Voiceover</span>
-                </div>
-                <span id="status3" class="text-[11px] bg-slate-800 text-slate-400 px-3 py-1 rounded-full font-semibold">Ready</span>
+            <div class="w-full bg-slate-900 h-2.5 rounded-full overflow-hidden border border-slate-800">
+                <div id="progressBar" class="bg-gradient-to-r from-blue-500 via-purple-500 to-emerald-400 h-full w-0 transition-all duration-300"></div>
             </div>
-            <div class="glass-card p-3.5 rounded-xl flex items-center justify-between">
-                <div class="flex items-center space-x-3">
-                    <div class="w-7 h-7 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-xs">4</div>
-                    <span class="text-xs font-bold">Auto SRT, Audio & MP4 Export</span>
-                </div>
-                <span id="status4" class="text-[11px] bg-slate-800 text-slate-400 px-3 py-1 rounded-full font-semibold">Ready</span>
+            <div class="grid grid-cols-3 gap-2 pt-1 text-[10px] text-center">
+                <div id="stepBadge1" class="bg-slate-900 p-2 rounded-lg text-slate-400">1. Scene Script</div>
+                <div id="stepBadge2" class="bg-slate-900 p-2 rounded-lg text-slate-400">2. Exact Audio Timing</div>
+                <div id="stepBadge3" class="bg-slate-900 p-2 rounded-lg text-slate-400">3. Scene + Audio Sync</div>
             </div>
         </div>
 
-        <!-- Start Button -->
-        <button type="button" onclick="startFullStudio()" class="w-full bg-gradient-to-r from-blue-600 via-purple-600 to-rose-600 hover:brightness-110 active:scale-[0.99] text-white py-4 rounded-2xl font-extrabold text-base shadow-xl shadow-purple-600/30 transition">
-            <i class="fa-solid fa-wand-magic-sparkles mr-2"></i> Gemini AI ဖြင့် Recap စတင်ဖန်တီးမည်
+        <!-- MASTER BUTTON -->
+        <button type="button" id="masterBtn" onclick="buildExactSyncVideo()" class="w-full bg-gradient-to-r from-blue-600 via-purple-600 to-rose-600 hover:brightness-110 text-white py-4 rounded-2xl font-extrabold text-base shadow-xl shadow-purple-600/30 transition">
+            <i class="fa-solid fa-clapperboard mr-2"></i> စာ + ရုပ် + အသံ ကွက်တိကျသော Video ထုတ်မည်
         </button>
 
-        <!-- Result Card -->
-        <div id="exportCard" class="hidden glass-card border-2 border-emerald-500/70 p-5 rounded-2xl space-y-4">
+        <!-- FINAL READY VIDEO PLAYER & DOWNLOAD -->
+        <div id="finalVideoSection" class="hidden glass-card border-2 border-emerald-500/70 p-5 rounded-2xl space-y-4">
             <div class="flex items-center justify-between">
-                <h3 class="font-extrabold text-emerald-400 text-base">Export အဆင်သင့်ဖြစ်ပါပြီ! (<span id="finalVoiceUsed">Puck</span>)</h3>
-                <span class="text-xs bg-emerald-500/20 text-emerald-300 px-3 py-1 rounded-full font-bold">Gemini AI</span>
+                <h3 class="font-extrabold text-emerald-400 text-base"><i class="fa-solid fa-circle-check mr-1.5"></i> စာ၊ ရုပ်၊ အသံ ၁၀၀% ကွက်တိ Video အဆင်သင့်ဖြစ်ပါပြီ!</h3>
+                <span class="text-[11px] bg-emerald-500/20 text-emerald-300 px-2.5 py-1 rounded-full font-bold">100% Synced</span>
             </div>
-            <textarea id="generatedScriptBox" rows="6" class="w-full bg-slate-950/90 border border-slate-800 rounded-xl p-3 text-xs text-slate-200 leading-relaxed focus:outline-none"></textarea>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <button type="button" onclick="playFullScriptVoice()" class="bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-volume-high"></i> Script အသံဖိုင် နားထောင်/ဒေါင်းမည် (.wav)
-                </button>
-                <button type="button" onclick="downloadAllFiles()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 py-3 rounded-xl font-extrabold text-xs flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-download"></i> SRT, Audio & MP4 ဒေါင်းလုဒ်ဆွဲမည်
-                </button>
+
+            <div class="bg-black rounded-xl overflow-hidden border border-slate-800 flex justify-center">
+                <video id="previewPlayer" controls playsinline class="max-h-[460px] w-auto"></video>
             </div>
+
+            <button type="button" onclick="downloadMergedVideo()" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 py-3.5 rounded-xl font-extrabold text-sm shadow-lg shadow-emerald-500/25 flex items-center justify-center gap-2">
+                <i class="fa-solid fa-download"></i> ဗီဒီယိုဖိုင်အပြည့်အစုံ ဒေါင်းလုဒ်ဆွဲမည် (TikTok Ready)
+            </button>
         </div>
+
     </div>
+
+    <video id="sourceVideo" muted playsinline crossorigin="anonymous" class="hidden"></video>
+    <canvas id="renderCanvas" class="hidden"></canvas>
 
     <script>
         let selectedVoice = 'Puck';
-        let selectedGender = 'male';
-        let selectedLang = 'Myanmar';
-        let playerAudio = new Audio();
-        let lastAudioBlob = null;
+        let finalMergedBlob = null;
+        let finalFileExt = 'mp4';
 
-        function setLang(lang) {
-            selectedLang = lang;
-            ['Myanmar', 'English', 'Thai', 'Chinese'].forEach(l => {
-                const btn = document.getElementById('lang' + l);
-                if (btn) {
-                    btn.className = (l === lang)
-                        ? "lang-btn py-2.5 rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 text-white text-xs font-bold shadow"
-                        : "lang-btn py-2.5 rounded-lg text-slate-400 hover:text-white text-xs font-bold transition";
-                }
-            });
-            previewCurrentVoice();
-        }
-
-        function resetPitch() {
-            document.getElementById('pitchRange').value = 0;
-            document.getElementById('pitchVal').innerText = 0;
-            previewCurrentVoice();
-        }
-
-        function selectAndPlayVoice(element, voiceName, roleTag, gender) {
+        function selectVoice(el, voiceName) {
             selectedVoice = voiceName;
-            selectedGender = gender;
-            document.querySelectorAll('.voice-btn').forEach(btn => {
-                btn.classList.remove('voice-card-active');
-                const icon = btn.querySelector('i');
-                if (icon) icon.className = "fa-solid fa-volume-high text-[10px] text-slate-500 absolute top-2 right-2";
-            });
-            element.classList.add('voice-card-active');
-            const activeIcon = element.querySelector('i');
-            if (activeIcon) activeIcon.className = "fa-solid fa-volume-high text-[10px] text-sky-400 animate-bounce absolute top-2 right-2";
-            previewCurrentVoice();
-        }
-
-        async function previewCurrentVoice() {
-            const samples = {
-                'Myanmar': selectedGender === 'female'
-                    ? 'မင်္ဂလာပါရှင်၊ ဒီနေ့ စိတ်ဝင်စားစရာ ဇာတ်ကားကောင်းလေးတစ်ကားကို အတူတူ ကြည့်လိုက်ကြရအောင်နော်။'
-                    : 'မင်္ဂလာပါ၊ ဒီဇာတ်ကားရဲ့ လျှို့ဝှက်ချက်တွေကို သိရဖို့ အခုပဲ အတူတူ ကြည့်လိုက်ကြရအောင်။',
-                'English': `Hello, I am ${selectedVoice}. Ready to narrate your movie recap naturally.`,
-                'Thai': `สวัสดีครับ ผมชื่อ ${selectedVoice} พร้อมพากย์เสียงสรุปภาพยนตร์ให้คุณแล้วครับ`,
-                'Chinese': `你好，我是 ${selectedVoice}，准备好为您解说电影了。`
-            };
-            await synthesizeAndPlay(samples[selectedLang]);
-        }
-
-        async function synthesizeAndPlay(text) {
-            const badge = document.getElementById('audioStatusBadge');
-            const label = document.getElementById('playingVoiceLabel');
-            const pitchVal = document.getElementById('pitchRange')?.value || '0';
-
-            badge.classList.remove('hidden');
-            badge.classList.add('flex');
-            label.innerText = `Gemini AI (${selectedVoice}) အသံထုတ်နေသည်...`;
-
-            try {
-                const res = await fetch(`/api/tts?voice=${encodeURIComponent(selectedVoice)}&pitch=${encodeURIComponent(pitchVal)}&text=${encodeURIComponent(text)}`);
-                if (!res.ok) {
-                    const err = await res.json();
-                    alert('Gemini TTS Error: ' + (err.error || 'GEMINI_API_KEY စစ်ဆေးပါ'));
-                    badge.classList.add('hidden');
-                    return;
-                }
-                const blob = await res.blob();
-                lastAudioBlob = blob;
-                const url = URL.createObjectURL(blob);
-                playerAudio.pause();
-                playerAudio.src = url;
-                label.innerText = `${selectedVoice} အသံဖွင့်နေသည်...`;
-                playerAudio.onended = () => {
-                    badge.classList.add('hidden');
-                    badge.classList.remove('flex');
-                };
-                await playerAudio.play();
-            } catch (e) {
-                badge.classList.add('hidden');
-            }
+            document.getElementById('playingVoiceLabel').innerText = `Selected: ${voiceName}`;
+            document.querySelectorAll('.voice-btn').forEach(b => b.classList.remove('voice-card-active'));
+            el.classList.add('voice-card-active');
         }
 
         function handleFileSelect(input) {
-            if (input.files && input.files[0]) document.getElementById('fileLabel').innerText = input.files[0].name;
+            if (input.files && input.files[0]) {
+                document.getElementById('fileLabel').innerText = input.files[0].name;
+            }
         }
 
-        function setStepStatus(id, text, done = false) {
-            const el = document.getElementById(id);
-            el.innerText = text;
-            el.className = done
-                ? "text-[11px] bg-emerald-500/20 text-emerald-300 px-3 py-1 rounded-full font-bold"
-                : "text-[11px] bg-amber-500/20 text-amber-300 px-3 py-1 rounded-full font-bold animate-pulse";
+        function setProgress(pct, text, stepActive) {
+            document.getElementById('progressBar').style.width = pct + '%';
+            document.getElementById('progressPercent').innerText = pct + '%';
+            document.getElementById('progressText').innerText = text;
+            if (stepActive) {
+                const badge = document.getElementById('stepBadge' + stepActive);
+                if (badge) badge.className = "bg-emerald-500/20 border border-emerald-500/40 p-2 rounded-lg text-emerald-300 font-bold";
+            }
         }
 
-        async function startFullStudio() {
-            const fileInput = document.getElementById('movieFile')?.files[0];
-            const linkInput = document.getElementById('videoLink')?.value.trim();
-            const sourceInfo = linkInput || (fileInput ? fileInput.name : '');
+        async function buildExactSyncVideo() {
+            const fileInput = document.getElementById('movieFile').files[0];
+            const titleInput = document.getElementById('videoLink').value.trim();
+            const platform = document.getElementById('platformPreset').value;
 
-            if (!sourceInfo) {
-                alert('ကျေးဇူးပြု၍ ဇာတ်ကားနာမည် သို့မဟုတ် MP4 ဖိုင် အရင်ထည့်ပါခင်ဗျာ။');
+            if (!fileInput && !titleInput) {
+                alert('ကျေးဇူးပြု၍ ဗီဒီယိုဖိုင် (MP4) သို့မဟုတ် ဇာတ်ကားနာမည် အရင်ထည့်ပေးပါခင်ဗျာ။');
                 return;
             }
 
-            setStepStatus('status2', 'Writing Script...');
+            const btn = document.getElementById('masterBtn');
+            btn.disabled = true;
+            btn.classList.add('opacity-50');
+            document.getElementById('finalVideoSection').classList.add('hidden');
+
             try {
-                const res = await fetch('/api/script', {
+                // STEP 1: Generate Scene-by-Scene Burmese Recap Script
+                setProgress(15, '1. Scene တစ်ခုချင်းစီအတွက် မြန်မာ Script ရေးနေပါသည်...', 1);
+                const sourceInfo = titleInput || fileInput.name;
+                const scriptRes = await fetch('/api/script', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        sourceInfo,
-                        platform: document.getElementById('platformPreset').value,
-                        lang: selectedLang
-                    })
+                    body: JSON.stringify({ sourceInfo, platform, lang: 'Myanmar' })
                 });
-                const data = await res.json();
-                if (!res.ok) {
-                    alert('Gemini API Error: ' + (data.error || 'GEMINI_API_KEY စစ်ဆေးပါ'));
-                    setStepStatus('status2', 'Error');
-                    return;
+                const scriptData = await scriptRes.json();
+                if (!scriptRes.ok || !scriptData.script) {
+                    throw new Error(scriptData.error || 'Script ရေးသားမှု မအောင်မြင်ပါ');
                 }
 
-                document.getElementById('generatedScriptBox').value = data.script;
-                document.getElementById('finalVoiceUsed').innerText = selectedVoice;
-                setStepStatus('status2', 'Completed', true);
+                // Split into clear short lines (1 line = 1 synced subtitle + 1 audio clip + 1 scene cut)
+                const cleanText = scriptData.script
+                    .replace(/\[HOOK\]|\[STORY\]|\[CLIFFHANGER\]|[#*🔥🎬⚡\[\]]/gi, '')
+                    .trim();
 
-                setStepStatus('status3', 'Generating Voice...');
-                await synthesizeAndPlay(data.script.slice(0, 450));
-                setStepStatus('status3', 'Completed', true);
-                setStepStatus('status4', 'Ready to Export', true);
+                const rawLines = cleanText
+                    .split(/[\n။\.!?]+/)
+                    .map(s => s.trim())
+                    .filter(s => s.length > 2);
 
-                document.getElementById('exportCard').classList.remove('hidden');
-                document.getElementById('exportCard').scrollIntoView({ behavior: 'smooth' });
+                // Keep lines concise (max ~75 chars per subtitle block) so text & voice stay 100% locked
+                const lines = [];
+                for (const l of rawLines) {
+                    if (l.length <= 80) {
+                        lines.push(l);
+                    } else {
+                        const mid = Math.floor(l.length / 2);
+                        const splitIdx = l.indexOf(' ', mid) !== -1 ? l.indexOf(' ', mid) : mid;
+                        lines.push(l.slice(0, splitIdx).trim());
+                        lines.push(l.slice(splitIdx).trim());
+                    }
+                }
+
+                // STEP 2: Generate individual audio for EACH line & record exact start/end timestamps
+                setProgress(35, '2. စာကြောင်းတစ်ကြောင်းချင်းစီအလိုက် အသံနှင့် စက္ကန့်အတိအကျ ချိန်ညှိနေသည်...', 2);
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const timeline = []; // { text, buffer, startSec, endSec, sceneRatio }
+                let cursorSec = 0;
+
+                for (let i = 0; i < lines.length; i++) {
+                    const pct = 35 + Math.round(((i + 1) / lines.length) * 35);
+                    setProgress(pct, `2. အသံနှင့် စာတန်း ကွက်တိချိန်ညှိနေသည် (${i + 1}/${lines.length})...`, 2);
+
+                    const ttsRes = await fetch(`/api/tts?voice=${encodeURIComponent(selectedVoice)}&text=${encodeURIComponent(lines[i])}`);
+                    if (!ttsRes.ok) {
+                        const errData = await ttsRes.json();
+                        throw new Error(errData.error || 'အသံထုတ်လုပ်မှု မအောင်မြင်ပါ');
+                    }
+
+                    const arrayBuf = await ttsRes.arrayBuffer();
+                    const decoded = await audioCtx.decodeAudioData(arrayBuf);
+                    const dur = decoded.duration;
+
+                    timeline.push({
+                        text: lines[i],
+                        buffer: decoded,
+                        startSec: cursorSec,
+                        endSec: cursorSec + dur,
+                        sceneRatio: i / Math.max(1, lines.length) // Maps chronologically through the movie
+                    });
+                    cursorSec += dur;
+                }
+
+                const totalDurationSec = cursorSec;
+                const sampleRate = timeline[0].buffer.sampleRate;
+                const totalSamples = timeline.reduce((acc, item) => acc + item.buffer.length, 0);
+
+                // Merge into one seamless master audio buffer
+                const masterAudioBuffer = audioCtx.createBuffer(1, totalSamples, sampleRate);
+                const masterChannel = masterAudioBuffer.getChannelData(0);
+                let sampleOffset = 0;
+                for (const item of timeline) {
+                    masterChannel.set(item.buffer.getChannelData(0), sampleOffset);
+                    sampleOffset += item.buffer.length;
+                }
+
+                // STEP 3: Render Video where EVERY scene cut, subtitle & voiceover triggers at exact timestamps
+                setProgress(75, '3. ရုပ် + အသံ + စာတန်းထိုး တစ်သားတည်း ပေါင်းစပ်နေပါသည်...', 3);
+                finalMergedBlob = await renderSyncedVideo(fileInput, masterAudioBuffer, audioCtx, timeline, platform, totalDurationSec);
+
+                setProgress(100, 'ပြီးစီးပါပြီ! စာ၊ ရုပ်၊ အသံ ကွက်တိ Video အဆင်သင့်ဖြစ်ပါပြီ။', 3);
+                const previewPlayer = document.getElementById('previewPlayer');
+                previewPlayer.src = URL.createObjectURL(finalMergedBlob);
+                document.getElementById('finalVideoSection').classList.remove('hidden');
+                document.getElementById('finalVideoSection').scrollIntoView({ behavior: 'smooth' });
+
             } catch (err) {
-                alert('Network Error: ' + err.message);
+                alert('Error: ' + err.message);
+                setProgress(0, 'Error: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.classList.remove('opacity-50');
             }
         }
 
-        async function playFullScriptVoice() {
-            const text = document.getElementById('generatedScriptBox').value;
-            if (text) await synthesizeAndPlay(text.slice(0, 450));
-            if (lastAudioBlob) triggerDownload(lastAudioBlob, `Myanmar_Voice_${selectedVoice}.wav`);
+        function renderSyncedVideo(videoFile, masterAudioBuffer, audioCtx, timeline, platform, totalDurationSec) {
+            return new Promise(async (resolve) => {
+                const canvas = document.getElementById('renderCanvas');
+                const ctx = canvas.getContext('2d');
+                const sourceVideo = document.getElementById('sourceVideo');
+
+                if (platform === 'tiktok') {
+                    canvas.width = 720;
+                    canvas.height = 1280;
+                } else {
+                    canvas.width = 1280;
+                    canvas.height = 720;
+                }
+
+                let hasVideo = false;
+                let videoDuration = 0;
+                if (videoFile) {
+                    sourceVideo.src = URL.createObjectURL(videoFile);
+                    sourceVideo.loop = true;
+                    await new Promise(r => {
+                        sourceVideo.onloadedmetadata = () => {
+                            videoDuration = sourceVideo.duration || 10;
+                            hasVideo = true;
+                            r();
+                        };
+                        sourceVideo.onerror = () => r();
+                    });
+                    if (hasVideo) await sourceVideo.play();
+                }
+
+                const canvasStream = canvas.captureStream(30);
+                const dest = audioCtx.createMediaStreamDestination();
+                const audioSource = audioCtx.createBufferSource();
+                audioSource.buffer = masterAudioBuffer;
+                audioSource.connect(dest);
+
+                const combinedStream = new MediaStream([
+                    ...canvasStream.getVideoTracks(),
+                    ...dest.stream.getAudioTracks()
+                ]);
+
+                let mimeType = 'video/mp4';
+                finalFileExt = 'mp4';
+                if (!MediaRecorder.isTypeSupported('video/mp4')) {
+                    mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus')
+                        ? 'video/webm;codecs=vp9,opus'
+                        : 'video/webm';
+                    finalFileExt = 'webm';
+                }
+
+                const recorder = new MediaRecorder(combinedStream, { mimeType, videoBitsPerSecond: 3800000 });
+                const chunks = [];
+
+                recorder.ondataavailable = (e) => { if (e.data && e.data.size > 0) chunks.push(e.data); };
+                recorder.onstop = () => {
+                    if (hasVideo) sourceVideo.pause();
+                    resolve(new Blob(chunks, { type: mimeType }));
+                };
+
+                recorder.start();
+                audioSource.start();
+
+                const startTime = performance.now();
+                let lastActiveIndex = -1;
+
+                function drawFrame() {
+                    const elapsedSec = (performance.now() - startTime) / 1000;
+                    if (elapsedSec >= totalDurationSec) {
+                        recorder.stop();
+                        return;
+                    }
+
+                    // Find the EXACT timeline segment matching current audio timestamp
+                    let activeIndex = timeline.findIndex(item => elapsedSec >= item.startSec && elapsedSec < item.endSec);
+                    if (activeIndex === -1) activeIndex = timeline.length - 1;
+                    const currentSegment = timeline[activeIndex];
+
+                    // When a NEW sentence starts, jump the movie video to the matching chronological scene!
+                    if (activeIndex !== lastActiveIndex) {
+                        lastActiveIndex = activeIndex;
+                        if (hasVideo && videoDuration > 1) {
+                            const targetTime = Math.min(videoDuration - 0.5, currentSegment.sceneRatio * videoDuration);
+                            if (Math.abs(sourceVideo.currentTime - targetTime) > 1.2) {
+                                sourceVideo.currentTime = targetTime;
+                            }
+                        }
+                    }
+
+                    // Subtle dynamic zoom progress within the current scene (1.06x -> 1.14x)
+                    const segDuration = Math.max(0.1, currentSegment.endSec - currentSegment.startSec);
+                    const segProgress = Math.min(1, Math.max(0, (elapsedSec - currentSegment.startSec) / segDuration));
+                    const dynamicZoom = 1.06 + (segProgress * 0.08);
+
+                    // Clear Background
+                    ctx.fillStyle = '#050811';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                    if (hasVideo && sourceVideo.readyState >= 2) {
+                        const vw = sourceVideo.videoWidth;
+                        const vh = sourceVideo.videoHeight;
+                        if (platform === 'tiktok') {
+                            // Blurred background
+                            ctx.save();
+                            ctx.filter = 'blur(22px) brightness(0.45)';
+                            const bgScale = Math.max(canvas.width / vw, canvas.height / vh);
+                            ctx.drawImage(sourceVideo, (canvas.width - vw * bgScale) / 2, (canvas.height - vh * bgScale) / 2, vw * bgScale, vh * bgScale);
+                            ctx.restore();
+
+                            // Foreground scene with smooth dynamic zoom
+                            const fgW = canvas.width * dynamicZoom;
+                            const fgH = (vh / vw) * fgW;
+                            ctx.drawImage(sourceVideo, (canvas.width - fgW) / 2, (canvas.height - fgH) / 2 - 40, fgW, fgH);
+                        } else {
+                            const scale = Math.max(canvas.width / vw, canvas.height / vh) * dynamicZoom;
+                            ctx.drawImage(sourceVideo, (canvas.width - vw * scale) / 2, (canvas.height - vh * scale) / 2, vw * scale, vh * scale);
+                        }
+                    } else {
+                        const grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+                        grad.addColorStop(0, '#0f172a');
+                        grad.addColorStop(1, '#1e1b4b');
+                        ctx.fillStyle = grad;
+                        ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    }
+
+                    // Top Banner
+                    ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
+                    ctx.fillRect(0, 0, canvas.width, 86);
+                    ctx.fillStyle = '#fbbf24';
+                    ctx.font = 'bold 25px Padauk, sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('🎬 MYANMAR MOVIE RECAP', canvas.width / 2, 52);
+
+                    // Draw EXACT synced subtitle for current audio segment
+                    drawWrappedSubtitle(
+                        ctx,
+                        currentSegment.text,
+                        canvas.width / 2,
+                        canvas.height - (platform === 'tiktok' ? 245 : 110),
+                        canvas.width - 80
+                    );
+
+                    requestAnimationFrame(drawFrame);
+                }
+
+                drawFrame();
+            });
         }
 
-        function downloadAllFiles() {
-            const script = document.getElementById('generatedScriptBox').value;
-            const srt = `1\n00:00:01,000 --> 00:00:10,000\n${script}\n`;
-            triggerDownload(new Blob([srt], { type: 'text/plain;charset=utf-8' }), `Myanmar_Recap_${selectedVoice}.srt`);
-            if (lastAudioBlob) triggerDownload(lastAudioBlob, `Myanmar_Voice_${selectedVoice}.wav`);
-            const fileInput = document.getElementById('movieFile')?.files[0];
-            if (fileInput) triggerDownload(fileInput, `Recap_Video_${selectedVoice}.mp4`);
+        function drawWrappedSubtitle(ctx, text, x, y, maxWidth) {
+            ctx.font = 'bold 31px Padauk, sans-serif';
+            ctx.textAlign = 'center';
+
+            const words = text.split(' ');
+            const lines = [];
+            let line = '';
+
+            for (let n = 0; n < words.length; n++) {
+                const testLine = line + words[n] + ' ';
+                if (ctx.measureText(testLine).width > maxWidth && n > 0) {
+                    lines.push(line.trim());
+                    line = words[n] + ' ';
+                } else {
+                    line = testLine;
+                }
+            }
+            lines.push(line.trim());
+
+            const lineHeight = 44;
+            const boxHeight = lines.length * lineHeight + 24;
+
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.82)';
+            ctx.beginPath();
+            ctx.roundRect(28, y - 36, ctx.canvas.width - 56, boxHeight, 16);
+            ctx.fill();
+
+            lines.forEach((l, idx) => {
+                ctx.fillStyle = idx === 0 ? '#fde047' : '#ffffff';
+                ctx.fillText(l, x, y + idx * lineHeight);
+            });
         }
 
-        function triggerDownload(blob, filename) {
-            const url = URL.createObjectURL(blob);
+        function downloadMergedVideo() {
+            if (!finalMergedBlob) return;
+            const url = URL.createObjectURL(finalMergedBlob);
             const a = document.createElement('a');
-            a.href = url; a.download = filename;
-            document.body.appendChild(a); a.click();
-            setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 500);
+            a.href = url;
+            a.download = `TikTok_ExactSync_Recap_${selectedVoice}.${finalFileExt}`;
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => {
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }, 500);
         }
     </script>
 </body>
