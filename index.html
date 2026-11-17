@@ -45,7 +45,7 @@
                     <p class="text-[11px] text-slate-400">Scene + Voice + Subtitle 100% Exact Sync</p>
                 </div>
             </div>
-            <span class="px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">Exact Sync Engine</span>
+            <span class="px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">Quota-Safe Sync</span>
         </div>
     </nav>
 
@@ -116,7 +116,7 @@
             </div>
             <div class="grid grid-cols-3 gap-2 pt-1 text-[10px] text-center">
                 <div id="stepBadge1" class="bg-slate-900 p-2 rounded-lg text-slate-400">1. Scene Script</div>
-                <div id="stepBadge2" class="bg-slate-900 p-2 rounded-lg text-slate-400">2. Exact Audio Timing</div>
+                <div id="stepBadge2" class="bg-slate-900 p-2 rounded-lg text-slate-400">2. Single-Call Audio</div>
                 <div id="stepBadge3" class="bg-slate-900 p-2 rounded-lg text-slate-400">3. Scene + Audio Sync</div>
             </div>
         </div>
@@ -130,7 +130,7 @@
         <div id="finalVideoSection" class="hidden glass-card border-2 border-emerald-500/70 p-5 rounded-2xl space-y-4">
             <div class="flex items-center justify-between">
                 <h3 class="font-extrabold text-emerald-400 text-base"><i class="fa-solid fa-circle-check mr-1.5"></i> စာ၊ ရုပ်၊ အသံ ၁၀၀% ကွက်တိ Video အဆင်သင့်ဖြစ်ပါပြီ!</h3>
-                <span class="text-[11px] bg-emerald-500/20 text-emerald-300 px-2.5 py-1 rounded-full font-bold">100% Synced</span>
+                <span id="usedEngineTag" class="text-[11px] bg-emerald-500/20 text-emerald-300 px-2.5 py-1 rounded-full font-bold">100% Synced</span>
             </div>
 
             <div class="bg-black rounded-xl overflow-hidden border border-slate-800 flex justify-center">
@@ -191,8 +191,8 @@
             document.getElementById('finalVideoSection').classList.add('hidden');
 
             try {
-                // STEP 1: Generate Scene-by-Scene Burmese Recap Script
-                setProgress(15, '1. Scene တစ်ခုချင်းစီအတွက် မြန်မာ Script ရေးနေပါသည်...', 1);
+                // STEP 1: Generate Burmese Recap Script
+                setProgress(20, '1. မြန်မာ Recap Script ရေးသားနေပါသည်...', 1);
                 const sourceInfo = titleInput || fileInput.name;
                 const scriptRes = await fetch('/api/script', {
                     method: 'POST',
@@ -204,7 +204,6 @@
                     throw new Error(scriptData.error || 'Script ရေးသားမှု မအောင်မြင်ပါ');
                 }
 
-                // Split into clear short lines (1 line = 1 synced subtitle + 1 audio clip + 1 scene cut)
                 const cleanText = scriptData.script
                     .replace(/\[HOOK\]|\[STORY\]|\[CLIFFHANGER\]|[#*🔥🎬⚡\[\]]/gi, '')
                     .trim();
@@ -214,10 +213,9 @@
                     .map(s => s.trim())
                     .filter(s => s.length > 2);
 
-                // Keep lines concise (max ~75 chars per subtitle block) so text & voice stay 100% locked
                 const lines = [];
                 for (const l of rawLines) {
-                    if (l.length <= 80) {
+                    if (l.length <= 85) {
                         lines.push(l);
                     } else {
                         const mid = Math.floor(l.length / 2);
@@ -227,50 +225,41 @@
                     }
                 }
 
-                // STEP 2: Generate individual audio for EACH line & record exact start/end timestamps
-                setProgress(35, '2. စာကြောင်းတစ်ကြောင်းချင်းစီအလိုက် အသံနှင့် စက္ကန့်အတိအကျ ချိန်ညှိနေသည်...', 2);
+                // STEP 2: Generate FULL Narration in ONE single API call (saves 90% quota!)
+                setProgress(45, '2. မြန်မာအသံဖိုင် တစ်ခုလုံးကို တစ်ကြိမ်တည်း ထုတ်လုပ်နေသည်...', 2);
+                const fullScriptForTTS = lines.join('။ ');
+                const ttsRes = await fetch(`/api/tts?voice=${encodeURIComponent(selectedVoice)}&text=${encodeURIComponent(fullScriptForTTS)}`);
+                if (!ttsRes.ok) {
+                    const errData = await ttsRes.json();
+                    throw new Error(errData.error || 'အသံထုတ်လုပ်မှု မအောင်မြင်ပါ');
+                }
+
+                const engineUsed = ttsRes.headers.get('X-TTS-Engine') || 'Synced';
+                document.getElementById('usedEngineTag').innerText = `100% Synced (${engineUsed})`;
+
                 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                const timeline = []; // { text, buffer, startSec, endSec, sceneRatio }
+                const arrayBuf = await ttsRes.arrayBuffer();
+                const masterAudioBuffer = await audioCtx.decodeAudioData(arrayBuf);
+                const totalDurationSec = masterAudioBuffer.duration;
+
+                // Proportional Syllable/Character Duration Sync across all lines
+                const totalChars = lines.reduce((sum, l) => sum + l.length, 0);
+                const timeline = [];
                 let cursorSec = 0;
 
                 for (let i = 0; i < lines.length; i++) {
-                    const pct = 35 + Math.round(((i + 1) / lines.length) * 35);
-                    setProgress(pct, `2. အသံနှင့် စာတန်း ကွက်တိချိန်ညှိနေသည် (${i + 1}/${lines.length})...`, 2);
-
-                    const ttsRes = await fetch(`/api/tts?voice=${encodeURIComponent(selectedVoice)}&text=${encodeURIComponent(lines[i])}`);
-                    if (!ttsRes.ok) {
-                        const errData = await ttsRes.json();
-                        throw new Error(errData.error || 'အသံထုတ်လုပ်မှု မအောင်မြင်ပါ');
-                    }
-
-                    const arrayBuf = await ttsRes.arrayBuffer();
-                    const decoded = await audioCtx.decodeAudioData(arrayBuf);
-                    const dur = decoded.duration;
-
+                    const weight = lines[i].length / Math.max(1, totalChars);
+                    const segDur = weight * totalDurationSec;
                     timeline.push({
                         text: lines[i],
-                        buffer: decoded,
                         startSec: cursorSec,
-                        endSec: cursorSec + dur,
-                        sceneRatio: i / Math.max(1, lines.length) // Maps chronologically through the movie
+                        endSec: cursorSec + segDur,
+                        sceneRatio: i / Math.max(1, lines.length)
                     });
-                    cursorSec += dur;
+                    cursorSec += segDur;
                 }
 
-                const totalDurationSec = cursorSec;
-                const sampleRate = timeline[0].buffer.sampleRate;
-                const totalSamples = timeline.reduce((acc, item) => acc + item.buffer.length, 0);
-
-                // Merge into one seamless master audio buffer
-                const masterAudioBuffer = audioCtx.createBuffer(1, totalSamples, sampleRate);
-                const masterChannel = masterAudioBuffer.getChannelData(0);
-                let sampleOffset = 0;
-                for (const item of timeline) {
-                    masterChannel.set(item.buffer.getChannelData(0), sampleOffset);
-                    sampleOffset += item.buffer.length;
-                }
-
-                // STEP 3: Render Video where EVERY scene cut, subtitle & voiceover triggers at exact timestamps
+                // STEP 3: Merge Video + Audio + Exact Synced Subtitles
                 setProgress(75, '3. ရုပ် + အသံ + စာတန်းထိုး တစ်သားတည်း ပေါင်းစပ်နေပါသည်...', 3);
                 finalMergedBlob = await renderSyncedVideo(fileInput, masterAudioBuffer, audioCtx, timeline, platform, totalDurationSec);
 
@@ -361,12 +350,10 @@
                         return;
                     }
 
-                    // Find the EXACT timeline segment matching current audio timestamp
                     let activeIndex = timeline.findIndex(item => elapsedSec >= item.startSec && elapsedSec < item.endSec);
                     if (activeIndex === -1) activeIndex = timeline.length - 1;
                     const currentSegment = timeline[activeIndex];
 
-                    // When a NEW sentence starts, jump the movie video to the matching chronological scene!
                     if (activeIndex !== lastActiveIndex) {
                         lastActiveIndex = activeIndex;
                         if (hasVideo && videoDuration > 1) {
@@ -377,12 +364,10 @@
                         }
                     }
 
-                    // Subtle dynamic zoom progress within the current scene (1.06x -> 1.14x)
                     const segDuration = Math.max(0.1, currentSegment.endSec - currentSegment.startSec);
                     const segProgress = Math.min(1, Math.max(0, (elapsedSec - currentSegment.startSec) / segDuration));
                     const dynamicZoom = 1.06 + (segProgress * 0.08);
 
-                    // Clear Background
                     ctx.fillStyle = '#050811';
                     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -390,14 +375,12 @@
                         const vw = sourceVideo.videoWidth;
                         const vh = sourceVideo.videoHeight;
                         if (platform === 'tiktok') {
-                            // Blurred background
                             ctx.save();
                             ctx.filter = 'blur(22px) brightness(0.45)';
                             const bgScale = Math.max(canvas.width / vw, canvas.height / vh);
                             ctx.drawImage(sourceVideo, (canvas.width - vw * bgScale) / 2, (canvas.height - vh * bgScale) / 2, vw * bgScale, vh * bgScale);
                             ctx.restore();
 
-                            // Foreground scene with smooth dynamic zoom
                             const fgW = canvas.width * dynamicZoom;
                             const fgH = (vh / vw) * fgW;
                             ctx.drawImage(sourceVideo, (canvas.width - fgW) / 2, (canvas.height - fgH) / 2 - 40, fgW, fgH);
@@ -413,7 +396,6 @@
                         ctx.fillRect(0, 0, canvas.width, canvas.height);
                     }
 
-                    // Top Banner
                     ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
                     ctx.fillRect(0, 0, canvas.width, 86);
                     ctx.fillStyle = '#fbbf24';
@@ -421,7 +403,6 @@
                     ctx.textAlign = 'center';
                     ctx.fillText('🎬 MYANMAR MOVIE RECAP', canvas.width / 2, 52);
 
-                    // Draw EXACT synced subtitle for current audio segment
                     drawWrappedSubtitle(
                         ctx,
                         currentSegment.text,
