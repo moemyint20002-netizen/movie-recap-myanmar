@@ -2,6 +2,7 @@ let selectedVoice = 'Thiha';
 let selectedGender = 'male';
 let baseVoicePitch = 0.92;
 let selectedLang = 'Myanmar';
+let currentAudio = null;
 
 // Language Switcher
 function setLang(lang) {
@@ -30,7 +31,7 @@ function resetPitch() {
     previewCurrentVoice();
 }
 
-// Select Voice Card & Immediately Play Real Audio Preview
+// Select Voice Card & Play Real Burmese Voice Sample
 function selectAndPlayVoice(element, voiceName, roleTag, gender, defaultPitch) {
     selectedVoice = voiceName;
     selectedGender = gender;
@@ -53,6 +54,7 @@ function previewCurrentVoice() {
     playVoiceSample(selectedVoice, selectedGender, baseVoicePitch);
 }
 
+// Real Burmese & Multi-Language TTS Audio Engine
 function playVoiceSample(voiceName, gender, basePitch) {
     const pitchSlider = parseInt(document.getElementById('pitchRange')?.value) || 0;
     let finalPitch = Math.max(0.5, Math.min(1.8, basePitch + (pitchSlider / 100)));
@@ -62,51 +64,88 @@ function playVoiceSample(voiceName, gender, basePitch) {
     if (badge && label) {
         badge.classList.remove('hidden');
         badge.classList.add('flex');
-        label.innerText = `${voiceName} (${selectedLang}) အသံနမူနာ...`;
+        label.innerText = `${voiceName} (${selectedLang}) အသံနမူနာ ဖွင့်နေပါသည်...`;
     }
 
-    playStudioTone(finalPitch);
-
+    // Stop any previous audio
+    if (currentAudio) {
+        currentAudio.pause();
+        currentAudio = null;
+    }
     if ('speechSynthesis' in window) {
-        try {
-            window.speechSynthesis.cancel();
-            const sampleTexts = {
-                'Myanmar': `Mingalabar, I am ${voiceName}. Welcome to AI Myanmar Movie Recap Studio.`,
-                'English': `Hello, I am ${voiceName}. Ready to narrate your movie recap in high definition.`,
-                'Thai': `Sawasdee, I am ${voiceName}. Ready for your movie recap dubbing.`,
-                'Chinese': `Ni hao, I am ${voiceName}. Ready for your movie recap narration.`
-            };
-
-            const utterance = new SpeechSynthesisUtterance(sampleTexts[selectedLang] || sampleTexts['English']);
-            const voices = window.speechSynthesis.getVoices();
-
-            if (voices.length > 0) {
-                const preferredVoice = voices.find(v =>
-                    gender === 'female'
-                        ? (v.name.toLowerCase().includes('female') || v.name.toLowerCase().includes('samantha') || v.name.toLowerCase().includes('zira'))
-                        : (v.name.toLowerCase().includes('male') || v.name.toLowerCase().includes('daniel') || v.name.toLowerCase().includes('david'))
-                );
-                if (preferredVoice) utterance.voice = preferredVoice;
-            }
-
-            utterance.pitch = finalPitch;
-            utterance.rate = 1.02;
-
-            const hideBadge = () => {
-                if (badge) {
-                    badge.classList.add('hidden');
-                    badge.classList.remove('flex');
-                }
-            };
-            utterance.onend = hideBadge;
-            utterance.onerror = () => setTimeout(hideBadge, 1000);
-            window.speechSynthesis.speak(utterance);
-        } catch (err) {
-            setTimeout(() => badge?.classList.add('hidden'), 1000);
-        }
-    } else {
-        setTimeout(() => badge?.classList.add('hidden'), 1000);
+        window.speechSynthesis.cancel();
     }
+
+    // Burmese Character Voice Scripts
+    const burmeseScripts = {
+        'Thiha': 'မင်္ဂလာပါ၊ ကျွန်တော်ကတော့ သီဟ ဖြစ်ပါတယ်။ ဇာတ်ကားအကျဉ်းချုပ် ပြောပြပေးဖို့ အဆင်သင့်ပါပဲ။',
+        'Puck': 'ဟေ့လူတို့၊ ဒီဇာတ်ကားကတော့ တကယ်ကို အမိုက်စားပဲနော်။ အတူတူ ကြည့်လိုက်ကြရအောင်။',
+        'Charon': 'ဒီညမှာတော့ လျှို့ဝှက်ဆန်းကြယ်တဲ့ ဇာတ်လမ်းတစ်ပုဒ်ကို ကျွန်တော်နဲ့အတူ နားဆင်ကြည့်ပါ။',
+        'Fenrir': 'သတိထားပါ... ဒီအခန်းမှာ မထင်မှတ်ထားတဲ့ အန္တရာယ်ကြီး ရောက်လာပါပြီ။',
+        'Orus': 'အမှန်တရားကို ဖော်ထုတ်ဖို့ အချိန်တန်ပါပြီ။ ဇာတ်လမ်းကို စလိုက်ကြစို့။',
+        'Gacrux': 'ဟိုးရှေးရှေးတုန်းက စိတ်ဝင်စားစရာ ဇာတ်လမ်းလေးတစ်ပုဒ် ရှိခဲ့ဖူးပါတယ်။',
+        'Nilar': 'မင်္ဂလာပါရှင်၊ ကျွန်မကတော့ နီလာ ဖြစ်ပါတယ်။ ဒီနေ့ ဇာတ်ကားကောင်းလေးတစ်ကား ပြောပြပေးပါမယ်။',
+        'Aoede': 'ချစ်စရာကောင်းပြီး ရင်ခုန်စရာ အချစ်ဇာတ်လမ်းလေးကို အတူတူ ခံစားကြည့်ရအောင်နော်။',
+        'Kore': 'ဝိုး... တကယ်ကို ရင်ခုန်စိတ်လှုပ်ရှားစရာ ကောင်းတဲ့ ဇာတ်ကားကြီးပါပဲရှင်။'
+    };
+
+    const sampleTexts = {
+        'Myanmar': burmeseScripts[voiceName] || 'မင်္ဂလာပါ၊ မြန်မာ ရုပ်ရှင်အကျဉ်းချုပ် စတူဒီယိုမှ ကြိုဆိုပါတယ်။',
+        'English': `Hello, I am ${voiceName}. Ready to narrate your movie recap in high definition.`,
+        'Thai': `สวัสดีครับ ผมชื่อ ${voiceName} พร้อมพากย์เสียงสรุปภาพยนตร์ให้คุณแล้วครับ`,
+        'Chinese': `你好，我是 ${voiceName}，准备好为您解说电影了。`
+    };
+
+    const langCodes = {
+        'Myanmar': 'my',
+        'English': 'en',
+        'Thai': 'th',
+        'Chinese': 'zh-CN'
+    };
+
+    const textToSpeak = sampleTexts[selectedLang] || sampleTexts['Myanmar'];
+    const langCode = langCodes[selectedLang] || 'my';
+
+    const hideBadge = () => {
+        if (badge) {
+            badge.classList.add('hidden');
+            badge.classList.remove('flex');
+        }
+    };
+
+    // 1. Check if device natively has Burmese/Target Voice
+    const voices = ('speechSynthesis' in window) ? window.speechSynthesis.getVoices() : [];
+    const nativeVoice = voices.find(v => v.lang.toLowerCase().startsWith(langCode));
+
+    if (nativeVoice) {
+        const utterance = new SpeechSynthesisUtterance(textToSpeak);
+        utterance.voice = nativeVoice;
+        utterance.pitch = finalPitch;
+        utterance.rate = 0.98;
+        utterance.onend = hideBadge;
+        utterance.onerror = hideBadge;
+        window.speechSynthesis.speak(utterance);
+        return;
+    }
+
+    // 2. If device lacks native Burmese voice, stream real Burmese Neural Audio directly
+    const ttsUrl = `https://translate.googleapis.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${langCode}&q=${encodeURIComponent(textToSpeak)}`;
+    currentAudio = new Audio(ttsUrl);
+    currentAudio.preservesPitch = false;
+    // Apply pitch & speed adjustment
+    currentAudio.playbackRate = Math.max(0.75, Math.min(1.35, finalPitch));
+
+    currentAudio.onended = hideBadge;
+    currentAudio.onerror = () => {
+        // Safe fallback if network blocks external audio stream
+        playStudioTone(finalPitch);
+        setTimeout(hideBadge, 1200);
+    };
+
+    currentAudio.play().catch(() => {
+        playStudioTone(finalPitch);
+        setTimeout(hideBadge, 1200);
+    });
 }
 
 function playStudioTone(pitchMultiplier) {
@@ -200,17 +239,14 @@ function downloadVideo() {
     const scriptText = document.getElementById('generatedScriptBox')?.value || 'Myanmar Movie Recap';
     const fileInput = document.getElementById('movieFile')?.files[0];
 
-    // 1. Download Subtitle (.srt) file automatically for CapCut
     const srtContent = `1\n00:00:01,000 --> 00:00:05,000\n${scriptText.split('\n')[0] || 'Myanmar Movie Recap'}\n\n2\n00:00:05,500 --> 00:00:12,000\n${scriptText.split('\n')[1] || 'Generated by AI Myanmar Movie Recap Studio'}\n`;
     triggerDownload(new Blob([srtContent], { type: 'text/plain;charset=utf-8' }), `Myanmar_Recap_${selectedVoice}.srt`);
 
-    // 2. If user uploaded an actual video file, export processed video blob cleanly
     if (fileInput && fileInput.type.startsWith('video/')) {
         triggerDownload(fileInput, `Myanmar_Recap_HD_${selectedVoice}.mp4`);
         return;
     }
 
-    // 3. Otherwise generate a real playable HD Recap Preview Video using HTML5 Canvas (Zero Error)
     try {
         const canvas = document.createElement('canvas');
         canvas.width = 1280;
@@ -254,7 +290,6 @@ function downloadVideo() {
                 }
             }, 33);
         } else {
-            // Safe fallback for older mobile browsers
             const fallbackBlob = new Blob([`AI MYANMAR MOVIE RECAP EXPORT\nVoice: ${selectedVoice}\n\n${scriptText}`], { type: 'text/plain;charset=utf-8' });
             triggerDownload(fallbackBlob, `Myanmar_Recap_Script_${selectedVoice}.txt`);
         }
