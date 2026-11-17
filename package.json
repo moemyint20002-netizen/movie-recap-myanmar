@@ -1,6 +1,12 @@
 {
   "name": "movie-recap-myanmar",
-  "version": "1.0.0",
+  "version": "2.0.0",
+  "private": true,
+  "description": "RECAST professional cinematic Burmese movie recap studio",
+  "scripts": {
+    "typecheck": "node --check api/tts.js && node --check api/script.js",
+    "build": "node -e \"const fs=require('fs'); for (const f of ['index.html','api/tts.js','api/script.js']) { if (!fs.existsSync(f)) throw new Error('Missing '+f); } console.log('RECAST static build checks passed');\""
+  },
   "dependencies": {
     "ws": "^8.16.0"
   }

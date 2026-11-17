@@ -1,644 +1,287 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="my">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Recap Studio Pro</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Padauk:wght@400;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
-        body {
-            font-family: 'Plus Jakarta Sans', 'Padauk', sans-serif;
-            background: #07090e;
-            color: #f1f5f9;
-            -webkit-tap-highlight-color: transparent;
-        }
-        .panel {
-            background: #111520;
-            border: 1px solid #1e2536;
-        }
-        .voice-active {
-            background: #1d4ed8 !important;
-            border-color: #60a5fa !important;
-            color: #ffffff !important;
-        }
-        input[type=range] { accent-color: #38bdf8; }
-        button { cursor: pointer; touch-action: manipulation; }
-    </style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#0b0d12" />
+  <title>RECAST — Cinematic Movie Recap Studio</title>
+  <meta name="description" content="RECAST professional cinematic movie recap studio for Burmese screenplay, voiceover, captions and export." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Padauk:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #090b10;
+      --surface: #11141c;
+      --surface-2: #171b25;
+      --surface-3: #1d2330;
+      --line: #2a3140;
+      --text: #f5f7fb;
+      --muted: #8993a6;
+      --soft: #b9c2d2;
+      --accent: #d8ff4f;
+      --accent-2: #9cff57;
+      --cyan: #74d6dc;
+      --amber: #f4bd65;
+      --red: #ff7e83;
+      --green: #88e4a5;
+      --shadow: 0 24px 80px rgba(0,0,0,.32);
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-width: 320px;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 85% -10%, rgba(216,255,79,.09), transparent 31rem),
+        radial-gradient(circle at -10% 20%, rgba(116,214,220,.08), transparent 24rem),
+        var(--bg);
+      font-family: Manrope, Padauk, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    button, input, textarea, select { font: inherit; }
+    button { cursor: pointer; }
+    .my, textarea, input[lang="my"] { font-family: Manrope, Padauk, sans-serif; }
+    .app-shell { display: grid; grid-template-columns: 248px minmax(0, 1fr); min-height: 100vh; }
+    .sidebar {
+      position: sticky; top: 0; height: 100vh; padding: 28px 18px;
+      border-right: 1px solid rgba(255,255,255,.08); background: rgba(12,14,20,.82); backdrop-filter: blur(22px);
+      display: flex; flex-direction: column; z-index: 5;
+    }
+    .brand { display: flex; align-items: center; gap: 11px; padding: 0 10px 30px; }
+    .brand-mark { width: 34px; height: 34px; border: 1px solid rgba(216,255,79,.55); border-radius: 11px; display: grid; place-items: center; color: var(--accent); background: linear-gradient(145deg,#263216,#121711); font-weight: 800; letter-spacing: -.1em; }
+    .brand-name { font-size: 15px; font-weight: 800; letter-spacing: .22em; }
+    .brand-sub { display:block; margin-top: 3px; color: var(--muted); font-size: 9px; letter-spacing: .14em; text-transform: uppercase; }
+    .nav-label { color: #586173; font-size: 10px; letter-spacing: .18em; text-transform: uppercase; padding: 0 12px 11px; }
+    .step-nav { display: grid; gap: 4px; }
+    .step-nav button { display: flex; align-items: center; gap: 12px; border: 0; border-radius: 10px; padding: 11px 12px; color: var(--muted); background: transparent; text-align: left; font-size: 12px; transition: .2s ease; }
+    .step-nav button:hover, .step-nav button.active { color: var(--text); background: var(--surface-2); }
+    .step-nav button.active .nav-num { color: var(--bg); background: var(--accent); border-color: var(--accent); }
+    .nav-num { width: 22px; height: 22px; border: 1px solid #3a4252; border-radius: 7px; display:grid; place-items:center; font-size: 10px; font-weight: 800; flex: 0 0 auto; }
+    .sidebar-foot { margin-top: auto; padding: 15px 12px; border: 1px solid var(--line); background: #0e1118; border-radius: 12px; }
+    .sidebar-foot strong { display: block; font-size: 11px; }
+    .sidebar-foot span { display: block; color: var(--muted); font-size: 10px; line-height: 1.6; margin-top: 5px; }
+    .main { min-width: 0; }
+    .topbar { height: 72px; padding: 0 42px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid rgba(255,255,255,.08); background: rgba(9,11,16,.66); backdrop-filter: blur(18px); position: sticky; top:0; z-index:4; }
+    .crumb { color: var(--muted); font-size: 11px; }
+    .crumb b { color: var(--text); font-weight: 700; }
+    .top-actions { display:flex; align-items:center; gap: 10px; }
+    .live { display:flex; align-items:center; gap:7px; padding:7px 10px; border:1px solid #26302c; border-radius:999px; color: var(--green); font-size:10px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; }
+    .live i { width:6px; height:6px; border-radius:50%; background:var(--green); box-shadow:0 0 12px var(--green); }
+    .icon-btn, .outline-btn { border:1px solid var(--line); border-radius:9px; padding:9px 12px; color:var(--soft); background:var(--surface); font-size:11px; font-weight:700; }
+    .icon-btn:hover, .outline-btn:hover { color:var(--text); border-color:#4a556b; }
+    .primary-btn { border:1px solid var(--accent); color:#0a0c0e; background:var(--accent); border-radius:9px; padding:10px 14px; font-size:11px; font-weight:800; box-shadow: 0 0 0 0 rgba(216,255,79,.2); transition:.2s ease; }
+    .primary-btn:hover { background:#e4ff83; box-shadow: 0 0 26px rgba(216,255,79,.17); transform:translateY(-1px); }
+    .primary-btn:disabled { opacity:.45; cursor:not-allowed; transform:none; }
+    .content { width: min(1420px, 100%); margin: 0 auto; padding: 42px; }
+    .eyebrow { color: var(--accent); font-size:10px; font-weight:800; letter-spacing:.2em; text-transform:uppercase; }
+    .hero { display:flex; align-items:flex-end; justify-content:space-between; gap:30px; padding: 8px 0 34px; }
+    h1 { max-width: 730px; margin: 10px 0 0; font-size: clamp(32px, 4.1vw, 62px); line-height: .98; letter-spacing: -.065em; font-weight:800; }
+    .hero p { max-width: 510px; margin: 14px 0 0; color: var(--muted); font-size:13px; line-height:1.75; }
+    .hero-kpis { display:flex; gap: 22px; flex:0 0 auto; }
+    .kpi b { display:block; font-size:20px; letter-spacing:-.04em; }
+    .kpi span { display:block; color:var(--muted); font-size:10px; margin-top:4px; }
+    .work-grid { display:grid; grid-template-columns: minmax(0, 1.65fr) minmax(300px, .75fr); gap:18px; align-items:start; }
+    .panel { border:1px solid var(--line); background: linear-gradient(150deg, rgba(23,27,37,.96), rgba(14,17,24,.96)); border-radius:16px; box-shadow:var(--shadow); }
+    .panel.pad { padding:20px; }
+    .panel-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:17px; }
+    .panel-title { display:flex; align-items:center; gap:10px; font-size:13px; font-weight:800; letter-spacing:-.01em; }
+    .panel-title .count { color:var(--muted); font-size:10px; font-weight:700; }
+    .panel-note { color:var(--muted); font-size:10px; line-height:1.6; }
+    .upload-zone { position:relative; min-height:198px; display:grid; place-items:center; overflow:hidden; border:1px dashed #4a5667; border-radius:14px; background: radial-gradient(circle at 50% 40%, rgba(216,255,79,.08), transparent 50%), #0d1016; }
+    .upload-zone.has-video { border-style:solid; border-color:#46524c; }
+    .upload-zone video { display:none; width:100%; height:100%; max-height:280px; object-fit:contain; background:#050608; }
+    .upload-zone.has-video video { display:block; }
+    .upload-prompt { padding:30px; text-align:center; }
+    .upload-zone.has-video .upload-prompt { display:none; }
+    .upload-icon { width:42px; height:42px; margin:0 auto 12px; display:grid; place-items:center; border:1px solid #52616d; border-radius:12px; color:var(--accent); font-size:18px; }
+    .upload-prompt strong { display:block; font-size:13px; }
+    .upload-prompt span { display:block; color:var(--muted); margin-top:7px; font-size:10px; }
+    .upload-prompt label { display:inline-block; margin-top:15px; padding:9px 14px; border-radius:8px; color:#0a0c0e; background:var(--accent); font-size:10px; font-weight:800; cursor:pointer; }
+    input[type=file] { display:none; }
+    .form-row { display:grid; grid-template-columns: 1.2fr .8fr; gap:10px; margin-top:11px; }
+    .field, textarea, select { width:100%; border:1px solid var(--line); border-radius:9px; padding:11px 12px; color:var(--text); outline:none; background:#0d1016; font-size:11px; }
+    textarea { min-height:140px; resize:vertical; line-height:1.75; }
+    .field:focus, textarea:focus, select:focus { border-color:#819251; box-shadow:0 0 0 3px rgba(216,255,79,.08); }
+    .field::placeholder, textarea::placeholder { color:#657084; }
+    .select-wrap { position:relative; }
+    select { appearance:none; }
+    .select-wrap:after { content:'⌄'; pointer-events:none; position:absolute; right:12px; top:8px; color:var(--muted); font-size:15px; }
+    .progress-strip { display:grid; grid-template-columns:repeat(6,1fr); gap:7px; padding:13px; margin-top:18px; border:1px solid var(--line); border-radius:12px; background:#0d1016; }
+    .progress-item { min-width:0; color:#596275; text-align:center; font-size:9px; font-weight:800; }
+    .progress-item .dot { width:8px; height:8px; margin:0 auto 6px; border:1px solid #4a5362; border-radius:50%; }
+    .progress-item.done, .progress-item.running { color:var(--accent); }
+    .progress-item.done .dot { border-color:var(--accent); background:var(--accent); }
+    .progress-item.running .dot { border-color:var(--amber); background:var(--amber); box-shadow:0 0 12px rgba(244,189,101,.6); }
+    .section { margin-top:18px; scroll-margin-top:92px; }
+    .split { display:grid; grid-template-columns: 1.1fr .9fr; gap:18px; }
+    .mini-label { color:#657084; font-size:9px; font-weight:800; letter-spacing:.16em; text-transform:uppercase; }
+    .button-row { display:flex; flex-wrap:wrap; gap:8px; }
+    .chip-btn { border:1px solid var(--line); border-radius:999px; padding:8px 11px; color:var(--soft); background:#0d1016; font-size:10px; font-weight:700; }
+    .chip-btn.active, .chip-btn:hover { color:#0c0f0b; border-color:var(--accent); background:var(--accent); }
+    .storyboard { display:grid; gap:8px; margin-top:12px; max-height:340px; overflow:auto; }
+    .scene { display:grid; grid-template-columns:42px minmax(0,1fr) auto; gap:11px; padding:11px; border:1px solid #27303d; border-radius:10px; background:#0d1016; }
+    .scene-index { width:32px; height:32px; display:grid; place-items:center; color:var(--accent); border-radius:8px; background:#202a18; font-size:11px; font-weight:800; }
+    .scene strong { display:block; font-size:10px; }
+    .scene p { margin:5px 0 0; color:var(--muted); font-size:10px; line-height:1.55; }
+    .scene-time { align-self:start; color:#6a7588; font-size:9px; white-space:nowrap; }
+    .voice-grid { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:8px; }
+    .voice-card { min-width:0; position:relative; border:1px solid var(--line); border-radius:11px; padding:12px 8px; color:var(--soft); background:#0d1016; text-align:left; transition:.2s ease; }
+    .voice-card:hover { border-color:#566173; transform:translateY(-2px); }
+    .voice-card.selected { border-color:var(--accent); box-shadow:inset 0 0 0 1px var(--accent); background:linear-gradient(150deg,#222d1a,#111711); }
+    .voice-card.locked { opacity:.64; }
+    .voice-name { display:block; color:var(--text); font-size:11px; font-weight:800; }
+    .voice-style { display:block; margin-top:5px; color:var(--muted); font-size:9px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .voice-status { display:inline-flex; align-items:center; gap:4px; margin-top:10px; color:var(--green); font-size:8px; font-weight:800; text-transform:uppercase; letter-spacing:.08em; }
+    .voice-status.lock { color:var(--amber); }
+    .voice-status i { width:5px; height:5px; border-radius:50%; background:currentColor; }
+    .audio-toolbar { display:grid; grid-template-columns:1fr 1fr; gap:12px; align-items:end; margin-top:17px; }
+    .range-row { display:flex; justify-content:space-between; color:var(--muted); font-size:10px; margin-bottom:7px; }
+    input[type=range] { width:100%; accent-color:var(--accent); }
+    .voice-feedback { min-height:38px; display:flex; align-items:center; padding:10px 12px; color:var(--muted); border:1px solid var(--line); background:#0d1016; border-radius:9px; font-size:10px; line-height:1.5; }
+    .voice-feedback.error { color:var(--red); border-color:rgba(255,126,131,.35); }
+    .voice-feedback.success { color:var(--green); border-color:rgba(136,228,165,.3); }
+    .preview-line { display:flex; align-items:center; gap:9px; margin-top:11px; }
+    audio { width:100%; height:31px; filter:sepia(.2) saturate(.8); }
+    .track-list { display:grid; gap:8px; }
+    .track { display:grid; grid-template-columns:30px minmax(0,1fr) auto; gap:11px; align-items:center; padding:11px 12px; border:1px solid var(--line); border-radius:10px; background:#0d1016; }
+    .track-icon { width:28px; height:28px; display:grid; place-items:center; border-radius:8px; background:#1c2430; color:var(--cyan); font-size:12px; }
+    .track strong { display:block; font-size:10px; }
+    .track span { display:block; margin-top:4px; color:var(--muted); font-size:9px; }
+    .toggle { width:35px; height:20px; position:relative; border:0; border-radius:999px; background:#2b3342; transition:.2s ease; }
+    .toggle:after { content:''; position:absolute; width:14px; height:14px; top:3px; left:3px; border-radius:50%; background:#8893a6; transition:.2s ease; }
+    .toggle.on { background:var(--accent); }
+    .toggle.on:after { left:18px; background:#0a0c0e; }
+    .asset-row { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px; }
+    .asset-label { display:flex; justify-content:space-between; align-items:center; border:1px dashed #394453; border-radius:9px; padding:10px; color:var(--muted); font-size:9px; cursor:pointer; }
+    .asset-label b { color:var(--text); font-size:10px; }
+    .caption-layout { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+    .canvas-shell { display:grid; place-items:center; min-height:300px; border:1px solid var(--line); border-radius:12px; background:repeating-conic-gradient(#111722 0 25%, #0e131c 0 50%) 50% / 14px 14px; overflow:hidden; }
+    canvas { max-width:100%; max-height:380px; border-radius:8px; box-shadow:0 16px 40px rgba(0,0,0,.4); }
+    .control-stack { display:grid; gap:12px; align-content:start; }
+    .control { padding:11px; border:1px solid var(--line); border-radius:10px; background:#0d1016; }
+    .control b { display:flex; justify-content:space-between; color:var(--soft); font-size:10px; margin-bottom:8px; }
+    .control b span { color:var(--accent); }
+    .qc-list { display:grid; gap:8px; }
+    .qc { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:11px 12px; border:1px solid var(--line); border-radius:10px; background:#0d1016; color:var(--muted); font-size:10px; }
+    .qc.ok { color:var(--green); border-color:rgba(136,228,165,.25); }
+    .qc.warn { color:var(--amber); border-color:rgba(244,189,101,.25); }
+    .qc-mark { width:19px; height:19px; display:grid; place-items:center; border-radius:6px; border:1px solid #475366; font-size:10px; }
+    .qc.ok .qc-mark { background:rgba(136,228,165,.15); border-color:var(--green); }
+    .qc.warn .qc-mark { background:rgba(244,189,101,.12); border-color:var(--amber); }
+    .render-card { margin-top:16px; padding:15px; border:1px solid #3d492b; border-radius:12px; background:linear-gradient(145deg, rgba(216,255,79,.08), rgba(13,16,22,.3)); }
+    .render-card h3 { margin:0; font-size:12px; }
+    .render-card p { color:var(--muted); font-size:10px; line-height:1.65; margin:7px 0 13px; }
+    .render-actions { display:flex; gap:8px; }
+    .output { display:none; margin-top:16px; }
+    .output.show { display:block; }
+    .output video { width:100%; max-height:480px; background:#050608; border-radius:11px; }
+    .toast { position:fixed; right:24px; bottom:24px; z-index:20; width:min(360px, calc(100vw - 48px)); transform:translateY(18px); opacity:0; pointer-events:none; padding:13px 15px; border:1px solid var(--line); border-radius:11px; color:var(--text); background:#171b25; box-shadow:var(--shadow); font-size:10px; line-height:1.55; transition:.25s ease; }
+    .toast.show { transform:none; opacity:1; }
+    .toast.error { border-color:rgba(255,126,131,.5); color:#ffd2d4; }
+    @media (max-width: 1100px) { .app-shell { grid-template-columns: 76px minmax(0,1fr); } .sidebar { padding:22px 10px; } .brand { padding:0 8px 26px; } .brand-name, .brand-sub, .nav-label, .step-nav button span:not(.nav-num), .sidebar-foot { display:none; } .step-nav button { justify-content:center; padding:11px 8px; } .content { padding:32px 24px; } .voice-grid { grid-template-columns:repeat(4,1fr); } }
+    @media (max-width: 780px) { .topbar { padding:0 18px; } .content { padding:28px 16px 44px; } .hero { display:block; } .hero-kpis { margin-top:22px; } .work-grid, .split, .caption-layout { grid-template-columns:1fr; } .form-row, .audio-toolbar, .asset-row { grid-template-columns:1fr; } .progress-strip { overflow:auto; grid-template-columns:repeat(6, minmax(72px,1fr)); } .voice-grid { grid-template-columns:repeat(2,1fr); } .top-actions .outline-btn { display:none; } .panel.pad { padding:15px; } }
+  </style>
 </head>
-<body class="pb-16">
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand"><div class="brand-mark">R/</div><div><div class="brand-name">RECAST</div><span class="brand-sub">Movie recap studio</span></div></div>
+      <div class="nav-label">Workspace</div>
+      <nav class="step-nav" aria-label="Workflow sections">
+        <button class="active" data-target="source"><span class="nav-num">01</span><span>Source & analysis</span></button>
+        <button data-target="screenplay"><span class="nav-num">02</span><span>Screenplay</span></button>
+        <button data-target="voice"><span class="nav-num">03</span><span>Voiceover</span></button>
+        <button data-target="layers"><span class="nav-num">04</span><span>Audio layers</span></button>
+        <button data-target="captions"><span class="nav-num">05</span><span>Captions & mask</span></button>
+        <button data-target="review"><span class="nav-num">06</span><span>QC & export</span></button>
+      </nav>
+      <div class="sidebar-foot"><strong>Session workspace</strong><span>Local-first editing. API keys stay server-side and are never written into the browser bundle.</span></div>
+    </aside>
 
-    <!-- Header -->
-    <header class="sticky top-0 z-50 bg-[#07090e]/90 backdrop-blur border-b border-slate-800/80 px-4 py-3">
-        <div class="max-w-3xl mx-auto flex justify-between items-center">
-            <div class="flex items-center gap-2.5">
-                <div class="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center">
-                    <i class="fa-solid fa-film text-white text-sm"></i>
-                </div>
-                <span class="font-extrabold text-sm tracking-wide">RECAP STUDIO</span>
-            </div>
-            <span id="videoDurationBadge" class="text-[11px] font-bold px-2.5 py-1 rounded-full bg-slate-800 text-sky-400">00:00</span>
+    <main class="main">
+      <header class="topbar"><div class="crumb">Projects / <b>Untitled recap</b></div><div class="top-actions"><div class="live"><i></i> studio ready</div><button class="outline-btn" id="newProjectBtn">New project</button><button class="primary-btn" id="topExportBtn">Export MP4</button></div></header>
+      <div class="content">
+        <section class="hero"><div><div class="eyebrow">Professional Burmese story lab</div><h1>Cut the noise.<br /><span style="color:var(--accent)">Keep the story.</span></h1><p>Upload a film, shape the hook, write a complete Burmese screenplay, audition a real provider voice, then review every frame before export.</p></div><div class="hero-kpis"><div class="kpi"><b id="sceneKpi">00</b><span>scenes mapped</span></div><div class="kpi"><b id="durationKpi">00:00</b><span>source duration</span></div><div class="kpi"><b id="qcKpi">0/5</b><span>QC passed</span></div></div></section>
+
+        <div class="work-grid">
+          <div>
+            <section class="panel pad" id="source">
+              <div class="panel-head"><div class="panel-title"><span>01</span> Source & analysis <span class="count">/ chronological ingest</span></div><span class="panel-note" id="sourceStatus">No source loaded</span></div>
+              <div class="upload-zone" id="uploadZone"><video id="sourceVideo" muted playsinline controls></video><div class="upload-prompt"><div class="upload-icon">↥</div><strong>Drop your source video here</strong><span>MP4, MOV or WebM · browser-local preview · no upload required</span><label for="movieFile">Choose video<input id="movieFile" type="file" accept="video/*" /></label></div></div>
+              <div class="form-row"><input id="videoTitle" class="field" placeholder="Film title or context (optional)" /><div class="select-wrap"><select id="platformPreset"><option value="tiktok">Vertical 9:16 · Short-form</option><option value="youtube">Landscape 16:9 · YouTube</option></select></div></div>
+              <div class="form-row"><input id="analysisBrief" class="field" placeholder="Director's brief — e.g. suspenseful, fast, spoiler-light" /><button class="primary-btn" id="analyzeBtn">Analyze chronology ↗</button></div>
+              <div class="progress-strip" id="progressStrip"><div class="progress-item" data-progress="analysis"><div class="dot"></div>Analysis</div><div class="progress-item" data-progress="screenplay"><div class="dot"></div>Screenplay</div><div class="progress-item" data-progress="voice"><div class="dot"></div>Voice</div><div class="progress-item" data-progress="layers"><div class="dot"></div>Mix</div><div class="progress-item" data-progress="captions"><div class="dot"></div>Captions</div><div class="progress-item" data-progress="review"><div class="dot"></div>Export</div></div>
+            </section>
+
+            <section class="panel pad section" id="screenplay"><div class="panel-head"><div class="panel-title"><span>02</span> Screenplay room <span class="count">/ hook → scenes → narration</span></div><span class="panel-note" id="scriptStatus">Draft not generated</span></div><div class="split"><div><div class="mini-label">Select your opening hook</div><div class="button-row" id="hookList" style="margin-top:10px"><button class="chip-btn active" data-hook="0">The impossible detail</button><button class="chip-btn" data-hook="1">A warning too late</button><button class="chip-btn" data-hook="2">The hidden motive</button></div><div class="mini-label" style="margin-top:18px">Complete Burmese screenplay</div><textarea id="scriptOutput" class="my" lang="my" placeholder="Analyze a source to generate a complete chronological Burmese screenplay. You can edit the narration before voiceover."></textarea><div class="button-row" style="margin-top:9px"><button class="outline-btn" id="copyScriptBtn">Copy screenplay</button><span class="panel-note" id="scriptCount">0 characters</span></div></div><div><div class="mini-label">Chronological scene recreation</div><div class="storyboard" id="storyboard"><div class="scene"><div class="scene-index">—</div><div><strong>Waiting for analysis</strong><p>Frame-by-frame scene cards will appear here with narration timing.</p></div><span class="scene-time">00:00</span></div></div></div></div></section>
+
+            <section class="panel pad section" id="voice"><div class="panel-head"><div class="panel-title"><span>03</span> Voiceover <span class="count">/ provider truth first</span></div><span class="panel-note" id="selectedVoiceLabel">Thiha selected</span></div><div class="voice-grid" id="voiceGrid"></div><div class="audio-toolbar"><div class="control"><div class="range-row"><span>Pitch correction</span><b id="pitchValue">0</b></div><input id="pitchRange" type="range" min="-20" max="20" step="1" value="0" /></div><button class="primary-btn" id="previewVoiceBtn">Preview selected voice ↗</button></div><div class="voice-feedback" id="voiceFeedback">Thiha is the current Burmese provider voice. Preview uses the same server-side voice selected for rendering.</div><div class="preview-line"><audio id="audioPreview" controls></audio></div></section>
+
+            <section class="panel pad section" id="layers"><div class="panel-head"><div class="panel-title"><span>04</span> Audio layers <span class="count">/ voice · music · SFX · timing</span></div><span class="panel-note">Mix plan</span></div><div class="track-list"><div class="track"><div class="track-icon">◉</div><div><strong>Voiceover</strong><span id="voiceTrackLabel">Thiha · waiting for screenplay</span></div><button class="toggle on" data-track="voice" aria-label="Toggle voiceover"></button></div><div class="track"><div class="track-icon">♫</div><div><strong>Music bed</strong><span id="musicTrackLabel">Optional upload · duck under narration</span></div><button class="toggle" data-track="music" aria-label="Toggle music"></button></div><div class="track"><div class="track-icon">✦</div><div><strong>Sound effects</strong><span id="sfxTrackLabel">Optional upload · scene accents</span></div><button class="toggle" data-track="sfx" aria-label="Toggle sound effects"></button></div><div class="track"><div class="track-icon">◌</div><div><strong>Lip-sync timing assist</strong><span>Beat markers follow narration segments; no fake face mapping</span></div><button class="toggle on" data-track="lipsync" aria-label="Toggle lip-sync timing assist"></button></div></div><div class="asset-row"><label class="asset-label" for="musicFile"><b id="musicName">+ Add music bed</b><span>MP3/WAV</span><input id="musicFile" type="file" accept="audio/*" /></label><label class="asset-label" for="sfxFile"><b id="sfxName">+ Add SFX layer</b><span>MP3/WAV</span><input id="sfxFile" type="file" accept="audio/*" /></label></div></section>
+
+            <section class="panel pad section" id="captions"><div class="panel-head"><div class="panel-title"><span>05</span> Captions & blur mask <span class="count">/ synchronized overlay</span></div><div class="button-row"><button class="chip-btn active" data-mask="auto">Auto mask</button><button class="chip-btn" data-mask="custom">Custom mask</button></div></div><div class="caption-layout"><div class="canvas-shell"><canvas id="previewCanvas" width="360" height="640"></canvas></div><div class="control-stack"><div class="control"><b>Subtitle baseline <span id="subYVal">78%</span></b><input id="subY" type="range" min="15" max="92" value="78" /></div><div class="control"><b>Text size <span id="subSizeVal">28px</span></b><input id="subSize" type="range" min="18" max="46" value="28" /></div><div class="control"><b>Blur strength <span id="blurVal">20px</span></b><input id="blurStrength" type="range" min="0" max="40" value="20" /></div><div class="control"><b>Mask height <span id="maskHVal">14%</span></b><input id="maskH" type="range" min="6" max="35" value="14" /></div><div class="control" id="customMaskControl" style="display:none"><b>Custom mask position <span id="maskYVal">74%</span></b><input id="maskY" type="range" min="10" max="90" value="74" /></div><div class="control"><b>Mask opacity <span id="maskOpacityVal">55%</span></b><input id="maskOpacity" type="range" min="25" max="90" value="55" /></div></div></div></section>
+          </div>
+
+          <aside>
+            <section class="panel pad section" id="review" style="margin-top:0"><div class="panel-head"><div class="panel-title"><span>06</span> Quality control</div><span class="panel-note" id="qcStatus">Not checked</span></div><div class="qc-list" id="qcList"><div class="qc" data-qc="source"><span>Source has a readable duration</span><span class="qc-mark">—</span></div><div class="qc" data-qc="script"><span>Screenplay has chronological scenes</span><span class="qc-mark">—</span></div><div class="qc" data-qc="voice"><span>Selected provider voice rendered</span><span class="qc-mark">—</span></div><div class="qc" data-qc="captions"><span>Caption and blur positions are valid</span><span class="qc-mark">—</span></div><div class="qc" data-qc="export"><span>Export format is browser-supported</span><span class="qc-mark">—</span></div></div><div class="render-card"><h3>Final render</h3><p>Render uses the source video, selected Burmese voiceover, caption timing, blur mask and enabled audio layers. Unsupported provider voices stop with a clear error instead of being remapped.</p><div class="render-actions"><button class="primary-btn" id="renderBtn">Render final MP4 ↗</button><button class="outline-btn" id="runQcBtn">Run QC</button></div></div><div class="output" id="output"><video id="finalPlayer" controls playsinline></video><button class="primary-btn" id="downloadBtn" style="width:100%;margin-top:10px">Download final file ↓</button></div></section>
+            <section class="panel pad section"><div class="panel-head"><div class="panel-title">Session notes</div><span class="panel-note">private</span></div><textarea id="sessionNotes" class="my" lang="my" style="min-height:115px" placeholder="မှတ်ချက် — hook, tone, spoiler level, music direction..."></textarea><div class="panel-note" style="margin-top:10px">Changes stay in this browser until you export. Secrets are read only by the server-side API.</div></section>
+          </aside>
         </div>
-    </header>
-
-    <main class="max-w-3xl mx-auto px-4 mt-5 space-y-4">
-
-        <!-- 1. Source -->
-        <section class="panel rounded-2xl p-4 space-y-3">
-            <div class="flex items-center justify-between gap-2">
-                <span class="text-xs font-extrabold uppercase tracking-wider text-slate-400">1. Source Video</span>
-                <label class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-3.5 py-2 rounded-xl flex items-center gap-2 cursor-pointer">
-                    <i class="fa-solid fa-upload"></i>
-                    <span id="fileLabel">Upload MP4</span>
-                    <input type="file" id="movieFile" accept="video/*" class="hidden" onchange="onVideoLoaded(this)">
-                </label>
-            </div>
-            <div class="flex flex-col sm:flex-row gap-2">
-                <input type="text" id="videoTitle" placeholder="Movie Title / Context (Optional)..." class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-blue-500">
-                <select id="platformPreset" onchange="updateLivePreview()" class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs">
-                    <option value="tiktok">9:16 TikTok</option>
-                    <option value="youtube">16:9 YouTube</option>
-                </select>
-            </div>
-        </section>
-
-        <!-- 2. Voice (Thiha + Gemini Voices, Locked to Final Render) -->
-        <section class="panel rounded-2xl p-4 space-y-3">
-            <div class="flex items-center justify-between">
-                <span class="text-xs font-extrabold uppercase tracking-wider text-slate-400">2. Voice (Tap to Preview)</span>
-                <span id="selectedVoiceBadge" class="text-xs font-bold text-sky-400">Thiha</span>
-            </div>
-            <div class="grid grid-cols-3 sm:grid-cols-7 gap-2">
-                <button type="button" onclick="pickVoice(this, 'Thiha')" class="voice-btn voice-active bg-slate-900 border border-slate-800 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5">
-                    <i class="fa-solid fa-volume-high text-[10px]"></i> Thiha
-                </button>
-                <button type="button" onclick="pickVoice(this, 'Puck')" class="voice-btn bg-slate-900 border border-slate-800 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5">
-                    <i class="fa-solid fa-volume-high text-[10px]"></i> Puck
-                </button>
-                <button type="button" onclick="pickVoice(this, 'Charon')" class="voice-btn bg-slate-900 border border-slate-800 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5">
-                    <i class="fa-solid fa-volume-high text-[10px]"></i> Charon
-                </button>
-                <button type="button" onclick="pickVoice(this, 'Fenrir')" class="voice-btn bg-slate-900 border border-slate-800 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5">
-                    <i class="fa-solid fa-volume-high text-[10px]"></i> Fenrir
-                </button>
-                <button type="button" onclick="pickVoice(this, 'Aoede')" class="voice-btn bg-slate-900 border border-slate-800 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5">
-                    <i class="fa-solid fa-volume-high text-[10px]"></i> Aoede
-                </button>
-                <button type="button" onclick="pickVoice(this, 'Kore')" class="voice-btn bg-slate-900 border border-slate-800 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5">
-                    <i class="fa-solid fa-volume-high text-[10px]"></i> Kore
-                </button>
-                <button type="button" onclick="pickVoice(this, 'Leda')" class="voice-btn bg-slate-900 border border-slate-800 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5">
-                    <i class="fa-solid fa-volume-high text-[10px]"></i> Leda
-                </button>
-            </div>
-        </section>
-
-        <!-- 3. Subtitle & Blur Studio (1:1 Matched to Final Render) -->
-        <section class="panel rounded-2xl p-4 space-y-4">
-            <div class="flex items-center justify-between">
-                <span class="text-xs font-extrabold uppercase tracking-wider text-slate-400">3. Subtitle & Blur Mask</span>
-                <div class="flex gap-1.5">
-                    <button type="button" id="btnAutoMask" onclick="setMaskMode('auto')" class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-sky-600 text-white">Auto Blur</button>
-                    <button type="button" id="btnCustomMask" onclick="setMaskMode('custom')" class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-slate-800 text-slate-300">Custom</button>
-                </div>
-            </div>
-
-            <div class="bg-black rounded-xl border border-slate-800 p-2 flex justify-center">
-                <canvas id="previewCanvas" class="max-h-[300px] w-auto rounded-lg"></canvas>
-            </div>
-
-            <div class="grid grid-cols-2 gap-3 text-xs">
-                <div class="bg-slate-950 p-3 rounded-xl border border-slate-800/80 space-y-1.5">
-                    <div class="flex justify-between text-[11px] text-slate-400">
-                        <span>Subtitle Y</span>
-                        <span id="valSubY" class="text-white font-bold">78%</span>
-                    </div>
-                    <input type="range" id="subY" min="15" max="92" value="78" oninput="syncControls()" class="w-full">
-                </div>
-
-                <div class="bg-slate-950 p-3 rounded-xl border border-slate-800/80 space-y-1.5">
-                    <div class="flex justify-between text-[11px] text-slate-400">
-                        <span>Text Size</span>
-                        <span id="valSubSize" class="text-white font-bold">28px</span>
-                    </div>
-                    <input type="range" id="subSize" min="18" max="46" value="28" oninput="syncControls()" class="w-full">
-                </div>
-
-                <div class="bg-slate-950 p-3 rounded-xl border border-slate-800/80 space-y-1.5">
-                    <div class="flex justify-between text-[11px] text-slate-400">
-                        <span>Blur Strength</span>
-                        <span id="valBlur" class="text-white font-bold">20px</span>
-                    </div>
-                    <input type="range" id="blurStrength" min="0" max="40" value="20" oninput="syncControls()" class="w-full">
-                </div>
-
-                <div class="bg-slate-950 p-3 rounded-xl border border-slate-800/80 space-y-1.5">
-                    <div class="flex justify-between text-[11px] text-slate-400">
-                        <span>Mask Height</span>
-                        <span id="valMaskH" class="text-white font-bold">14%</span>
-                    </div>
-                    <input type="range" id="maskH" min="6" max="35" value="14" oninput="syncControls()" class="w-full">
-                </div>
-            </div>
-
-            <div id="customMaskPanel" class="hidden grid grid-cols-2 gap-3 text-xs pt-1 border-t border-slate-800/80">
-                <div class="bg-slate-950 p-3 rounded-xl border border-slate-800/80 space-y-1.5">
-                    <div class="flex justify-between text-[11px] text-slate-400">
-                        <span>Mask Y</span>
-                        <span id="valMaskY" class="text-white font-bold">74%</span>
-                    </div>
-                    <input type="range" id="maskY" min="10" max="90" value="74" oninput="syncControls()" class="w-full">
-                </div>
-                <div class="bg-slate-950 p-3 rounded-xl border border-slate-800/80 space-y-1.5">
-                    <div class="flex justify-between text-[11px] text-slate-400">
-                        <span>Mask Width</span>
-                        <span id="valMaskW" class="text-white font-bold">92%</span>
-                    </div>
-                    <input type="range" id="maskW" min="30" max="100" value="92" oninput="syncControls()" class="w-full">
-                </div>
-            </div>
-        </section>
-
-        <!-- Pipeline Verification -->
-        <section class="panel rounded-2xl p-4 space-y-3">
-            <div class="grid grid-cols-3 gap-2 text-center text-[11px] font-bold">
-                <div id="st1" class="bg-slate-950 border border-slate-800 p-2.5 rounded-xl text-slate-400">1. Analysis: Idle</div>
-                <div id="st2" class="bg-slate-950 border border-slate-800 p-2.5 rounded-xl text-slate-400">2. Voice: Idle</div>
-                <div id="st3" class="bg-slate-950 border border-slate-800 p-2.5 rounded-xl text-slate-400">3. Render: Idle</div>
-            </div>
-
-            <div class="space-y-1">
-                <div class="flex justify-between text-[11px] font-bold">
-                    <span id="progressMsg" class="text-slate-300">Ready</span>
-                    <span id="progressPct" class="text-sky-400">0%</span>
-                </div>
-                <div class="w-full h-2 bg-slate-950 rounded-full overflow-hidden">
-                    <div id="progressFill" class="h-full w-0 bg-blue-500 transition-all duration-200"></div>
-                </div>
-            </div>
-
-            <div id="verifyBox" class="hidden space-y-2 pt-2 border-t border-slate-800">
-                <textarea id="scriptOutput" rows="3" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 focus:outline-none"></textarea>
-                <audio id="audioVerifyPlayer" controls class="w-full h-8"></audio>
-            </div>
-        </section>
-
-        <button type="button" id="runBtn" onclick="startPipeline()" class="w-full bg-blue-600 hover:bg-blue-500 active:scale-[0.99] text-white py-3.5 rounded-2xl font-extrabold text-sm shadow-lg transition">
-            Generate Synced Video
-        </button>
-
-        <section id="outputSection" class="hidden panel border-emerald-500/60 rounded-2xl p-4 space-y-3">
-            <div class="flex justify-between items-center">
-                <span class="text-xs font-extrabold text-emerald-400 uppercase">Final Output</span>
-                <span id="engineBadge" class="text-[11px] bg-emerald-500/20 text-emerald-300 px-2.5 py-0.5 rounded-full font-bold">Synced</span>
-            </div>
-            <div class="bg-black rounded-xl overflow-hidden flex justify-center">
-                <video id="finalPlayer" controls playsinline class="max-h-[420px] w-auto"></video>
-            </div>
-            <button type="button" onclick="downloadOutput()" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 py-3 rounded-xl font-extrabold text-xs">
-                <i class="fa-solid fa-download mr-1.5"></i> Download Video
-            </button>
-        </section>
-
-    </div>
-
-    <video id="srcVideo" muted playsinline crossorigin="anonymous" class="hidden"></video>
-
-    <script>
-        let selectedVoice = 'Thiha';
-        let maskMode = 'auto';
-        let finalBlob = null;
-        let finalExt = 'mp4';
-        let previewAudio = new Audio();
-        let loadedVideoDuration = 0;
-
-                function resolveTtsParams(voiceLabel) {
-            return { apiVoice: voiceLabel, pitch: '0' };
-        }
-        async function pickVoice(el, name) {
-            selectedVoice = name;
-            const badge = document.getElementById('selectedVoiceBadge');
-            badge.innerText = `${name} (Preview...)`;
-            document.querySelectorAll('.voice-btn').forEach(b => b.classList.remove('voice-active'));
-            el.classList.add('voice-active');
-
-            try {
-                previewAudio.pause();
-                previewAudio.currentTime = 0;
-                const { apiVoice, pitch } = resolveTtsParams(name);
-                const sampleText = 'မင်္ဂလာပါ၊ ဒီဇာတ်ကားရဲ့ ဇာတ်လမ်းအကျဉ်းကို အခုပဲ အတူတူ ကြည့်လိုက်ကြရအောင်။';
-                const res = await fetch(`/api/tts?voice=${encodeURIComponent(apiVoice)}&pitch=${encodeURIComponent(pitch)}&text=${encodeURIComponent(sampleText)}`);
-                if (!res.ok) {
-                    const err = await res.json().catch(() => ({}));
-                    badge.innerText = `${name} (Error)`;
-                    alert('Voice Error: ' + (err.error || 'TTS API Failed'));
-                    return;
-                }
-                const blob = await res.blob();
-                previewAudio.src = URL.createObjectURL(blob);
-                badge.innerText = `${name} (Playing)`;
-                previewAudio.onended = () => { badge.innerText = name; };
-                await previewAudio.play();
-            } catch (e) {
-                badge.innerText = name;
-            }
-        }
-
-        function setMaskMode(mode) {
-            maskMode = mode;
-            const autoBtn = document.getElementById('btnAutoMask');
-            const customBtn = document.getElementById('btnCustomMask');
-            const customPanel = document.getElementById('customMaskPanel');
-
-            if (mode === 'auto') {
-                autoBtn.className = "px-2.5 py-1 rounded-lg text-[11px] font-bold bg-sky-600 text-white";
-                customBtn.className = "px-2.5 py-1 rounded-lg text-[11px] font-bold bg-slate-800 text-slate-300";
-                customPanel.classList.add('hidden');
-            } else {
-                customBtn.className = "px-2.5 py-1 rounded-lg text-[11px] font-bold bg-sky-600 text-white";
-                autoBtn.className = "px-2.5 py-1 rounded-lg text-[11px] font-bold bg-slate-800 text-slate-300";
-                customPanel.classList.remove('hidden');
-            }
-            updateLivePreview();
-        }
-
-        function syncControls() {
-            document.getElementById('valSubY').innerText = document.getElementById('subY').value + '%';
-            document.getElementById('valSubSize').innerText = document.getElementById('subSize').value + 'px';
-            document.getElementById('valBlur').innerText = document.getElementById('blurStrength').value + 'px';
-            document.getElementById('valMaskH').innerText = document.getElementById('maskH').value + '%';
-            document.getElementById('valMaskY').innerText = document.getElementById('maskY').value + '%';
-            document.getElementById('valMaskW').innerText = document.getElementById('maskW').value + '%';
-            updateLivePreview();
-        }
-
-        function onVideoLoaded(input) {
-            if (input.files && input.files[0]) {
-                document.getElementById('fileLabel').innerText = input.files[0].name;
-                const srcVid = document.getElementById('srcVideo');
-                srcVid.src = URL.createObjectURL(input.files[0]);
-                srcVid.onloadedmetadata = () => {
-                    loadedVideoDuration = srcVid.duration || 0;
-                    const mins = Math.floor(loadedVideoDuration / 60);
-                    const secs = Math.floor(loadedVideoDuration % 60);
-                    document.getElementById('videoDurationBadge').innerText = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-                    srcVid.currentTime = Math.min(2, loadedVideoDuration / 3);
-                };
-                srcVid.onseeked = () => updateLivePreview();
-            }
-        }
-
-        function getLayoutConfig() {
-            const subY = parseInt(document.getElementById('subY').value) / 100;
-            const subSize = parseInt(document.getElementById('subSize').value);
-            const blurStrength = parseInt(document.getElementById('blurStrength').value);
-            const maskH = parseInt(document.getElementById('maskH').value) / 100;
-
-            const maskY = maskMode === 'auto' ? Math.max(0.05, subY - (maskH * 0.35)) : (parseInt(document.getElementById('maskY').value) / 100);
-            const maskW = maskMode === 'auto' ? 0.92 : (parseInt(document.getElementById('maskW').value) / 100);
-
-            return { subY, subSize, blurStrength, maskH, maskY, maskW };
-        }
-
-        function drawCompositeFrame(ctx, canvas, srcVid, platform, subtitleText, zoomFactor) {
-            const cfg = getLayoutConfig();
-            const w = canvas.width;
-            const h = canvas.height;
-
-            ctx.fillStyle = '#05070c';
-            ctx.fillRect(0, 0, w, h);
-
-            const hasVid = srcVid && srcVid.readyState >= 2;
-            if (hasVid) {
-                const vw = srcVid.videoWidth;
-                const vh = srcVid.videoHeight;
-                if (platform === 'tiktok') {
-                    ctx.save();
-                    ctx.filter = 'blur(20px) brightness(0.45)';
-                    const bgScale = Math.max(w / vw, h / vh);
-                    ctx.drawImage(srcVid, (w - vw * bgScale) / 2, (h - vh * bgScale) / 2, vw * bgScale, vh * bgScale);
-                    ctx.restore();
-
-                    const fgW = w * zoomFactor;
-                    const fgH = (vh / vw) * fgW;
-                    ctx.drawImage(srcVid, (w - fgW) / 2, (h - fgH) / 2 - (h * 0.04), fgW, fgH);
-                } else {
-                    const sc = Math.max(w / vw, h / vh) * zoomFactor;
-                    ctx.drawImage(srcVid, (w - vw * sc) / 2, (h - vh * sc) / 2, vw * sc, vh * sc);
-                }
-            } else {
-                const g = ctx.createLinearGradient(0, 0, w, h);
-                g.addColorStop(0, '#0f172a');
-                g.addColorStop(1, '#1e1b4b');
-                ctx.fillStyle = g;
-                ctx.fillRect(0, 0, w, h);
-            }
-
-            const boxW = w * cfg.maskW;
-            const boxH = h * cfg.maskH;
-            const boxX = (w - boxW) / 2;
-            const boxY = h * cfg.maskY;
-
-            ctx.save();
-            ctx.beginPath();
-            ctx.roundRect(boxX, boxY, boxW, boxH, Math.round(w * 0.02));
-            ctx.clip();
-
-            if (hasVid && cfg.blurStrength > 0) {
-                const scaledBlur = Math.max(1, Math.round(cfg.blurStrength * (w / 360)));
-                ctx.filter = `blur(${scaledBlur}px) brightness(0.65)`;
-                const vw = srcVid.videoWidth;
-                const vh = srcVid.videoHeight;
-                if (platform === 'tiktok') {
-                    const fgW = w * zoomFactor;
-                    const fgH = (vh / vw) * fgW;
-                    ctx.drawImage(srcVid, (w - fgW) / 2, (h - fgH) / 2 - (h * 0.04), fgW, fgH);
-                } else {
-                    const sc = Math.max(w / vw, h / vh) * zoomFactor;
-                    ctx.drawImage(srcVid, (w - vw * sc) / 2, (h - vh * sc) / 2, vw * sc, vh * sc);
-                }
-            }
-            ctx.filter = 'none';
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
-            ctx.fillRect(boxX, boxY, boxW, boxH);
-            ctx.restore();
-
-            if (subtitleText) {
-                const scaleRatio = w / 360;
-                const fontSize = Math.round(cfg.subSize * 0.52 * scaleRatio);
-                ctx.font = `bold ${fontSize}px Padauk, sans-serif`;
-                ctx.textAlign = 'center';
-
-                const maxTextW = boxW - (24 * scaleRatio);
-                const words = subtitleText.split(' ');
-                const lines = [];
-                let line = '';
-                for (let i = 0; i < words.length; i++) {
-                    const test = line + words[i] + ' ';
-                    if (ctx.measureText(test).width > maxTextW && i > 0) {
-                        lines.push(line.trim());
-                        line = words[i] + ' ';
-                    } else {
-                        line = test;
-                    }
-                }
-                lines.push(line.trim());
-
-                const lineH = fontSize * 1.35;
-                const textStartY = h * cfg.subY;
-                lines.forEach((l, idx) => {
-                    ctx.fillStyle = idx === 0 ? '#fde047' : '#ffffff';
-                    ctx.fillText(l, w / 2, textStartY + idx * lineH);
-                });
-            }
-        }
-
-        function updateLivePreview() {
-            const canvas = document.getElementById('previewCanvas');
-            const platform = document.getElementById('platformPreset').value;
-            if (platform === 'tiktok') {
-                canvas.width = 360;
-                canvas.height = 640;
-            } else {
-                canvas.width = 640;
-                canvas.height = 360;
-            }
-            const ctx = canvas.getContext('2d');
-            const srcVid = document.getElementById('srcVideo');
-            drawCompositeFrame(ctx, canvas, srcVid, platform, 'နမူနာ မြန်မာစာတန်းထိုး နေရာနှင့် Blur အနေအထား', 1.05);
-        }
-
-        async function extractVideoFrames(srcVid) {
-            if (!srcVid || !srcVid.src || !loadedVideoDuration || loadedVideoDuration < 1) return [];
-            const frames = [];
-            const tmpCanvas = document.createElement('canvas');
-            tmpCanvas.width = 320;
-            tmpCanvas.height = 180;
-            const tmpCtx = tmpCanvas.getContext('2d');
-
-            const samplePoints = [0.08, 0.25, 0.42, 0.60, 0.78, 0.92];
-            for (const ratio of samplePoints) {
-                await new Promise(resolve => {
-                    srcVid.currentTime = ratio * loadedVideoDuration;
-                    srcVid.onseeked = () => {
-                        tmpCtx.drawImage(srcVid, 0, 0, tmpCanvas.width, tmpCanvas.height);
-                        frames.push(tmpCanvas.toDataURL('image/jpeg', 0.6));
-                        resolve();
-                    };
-                });
-            }
-            return frames;
-        }
-
-        function setStepBadge(num, state, label) {
-            const el = document.getElementById('st' + num);
-            el.innerText = label;
-            if (state === 'running') el.className = "bg-amber-500/20 border border-amber-500/40 p-2.5 rounded-xl text-amber-300 animate-pulse";
-            else if (state === 'ok') el.className = "bg-emerald-500/20 border border-emerald-500/40 p-2.5 rounded-xl text-emerald-300";
-            else if (state === 'err') el.className = "bg-rose-500/20 border border-rose-500/40 p-2.5 rounded-xl text-rose-300";
-        }
-
-        function setBar(pct, msg) {
-            document.getElementById('progressFill').style.width = pct + '%';
-            document.getElementById('progressPct').innerText = pct + '%';
-            document.getElementById('progressMsg').innerText = msg;
-        }
-
-        async function startPipeline() {
-            const fileInput = document.getElementById('movieFile').files[0];
-            const titleInput = document.getElementById('videoTitle').value.trim();
-            const platform = document.getElementById('platformPreset').value;
-            const srcVid = document.getElementById('srcVideo');
-
-            if (!fileInput && !titleInput) {
-                alert('MP4 ဖိုင် သို့မဟုတ် ဇာတ်ကားနာမည် ထည့်ပါ။');
-                return;
-            }
-
-            const btn = document.getElementById('runBtn');
-            btn.disabled = true;
-            btn.classList.add('opacity-50');
-            document.getElementById('outputSection').classList.add('hidden');
-            document.getElementById('verifyBox').classList.add('hidden');
-
-            try {
-                // STEP 1: Visual Video Analysis + Exact Duration Script
-                setStepBadge(1, 'running', '1. Analysis: Scanning...');
-                setBar(15, 'Analyzing video frames & duration...');
-
-                const targetDuration = loadedVideoDuration > 2 ? loadedVideoDuration : 45;
-                const frames = await extractVideoFrames(srcVid);
-
-                const scriptRes = await fetch('/api/script', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        sourceInfo: titleInput || (fileInput ? fileInput.name : ''),
-                        durationSec: targetDuration,
-                        frames,
-                        lang: 'Myanmar'
-                    })
-                });
-                const scriptData = await scriptRes.json();
-
-                if (!scriptRes.ok || !scriptData.script || scriptData.script.trim().length < 15) {
-                    setStepBadge(1, 'err', '1. Analysis: Failed');
-                    throw new Error(scriptData.error || 'Script မထွက်ပါ');
-                }
-
-                const cleanText = scriptData.script.replace(/[#*🔥🎬⚡\[\]]/gi, '').trim();
-                document.getElementById('scriptOutput').value = cleanText;
-                document.getElementById('verifyBox').classList.remove('hidden');
-                setStepBadge(1, 'ok', '1. Analysis: OK');
-
-                const lines = cleanText
-                    .split(/[\n။\.!?]+/)
-                    .map(s => s.trim())
-                    .filter(s => s.length > 2);
-
-                // STEP 2: Generate Voiceover using LOCKED selectedVoice (Exact match with preview)
-                setStepBadge(2, 'running', `2. Voice (${selectedVoice})...`);
-                setBar(40, `Generating ${selectedVoice} voiceover...`);
-
-                const { apiVoice, pitch } = resolveTtsParams(selectedVoice);
-                const ttsRes = await fetch(`/api/tts?voice=${encodeURIComponent(apiVoice)}&pitch=${encodeURIComponent(pitch)}&text=${encodeURIComponent(lines.join('။ '))}`);
-                if (!ttsRes.ok) {
-                    const errJson = await ttsRes.json().catch(() => ({}));
-                    setStepBadge(2, 'err', '2. Voice: Failed');
-                    throw new Error(errJson.error || 'Audio မထွက်ပါ');
-                }
-
-                const audioArrayBuf = await ttsRes.arrayBuffer();
-                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                const masterBuffer = await audioCtx.decodeAudioData(audioArrayBuf.slice(0));
-
-                const verifyAudioBlob = new Blob([audioArrayBuf], { type: ttsRes.headers.get('Content-Type') || 'audio/wav' });
-                document.getElementById('audioVerifyPlayer').src = URL.createObjectURL(verifyAudioBlob);
-                document.getElementById('engineBadge').innerText = `${selectedVoice} • ${ttsRes.headers.get('X-TTS-Engine') || 'Synced'}`;
-                setStepBadge(2, 'ok', `2. Voice: OK (${Math.round(masterBuffer.duration)}s)`);
-
-                const finalTotalDur = loadedVideoDuration > 2 ? Math.max(loadedVideoDuration, masterBuffer.duration) : masterBuffer.duration;
-                const totalChars = lines.reduce((a, b) => a + b.length, 0);
-                const timeline = [];
-                let cursor = 0;
-                lines.forEach((line) => {
-                    const segDur = (line.length / Math.max(1, totalChars)) * finalTotalDur;
-                    timeline.push({
-                        text: line,
-                        start: cursor,
-                        end: cursor + segDur
-                    });
-                    cursor += segDur;
-                });
-
-                // STEP 3: Fast Render with Locked Settings
-                setStepBadge(3, 'running', '3. Render: Fast Merge...');
-                finalBlob = await renderVideoAccelerated(srcVid, masterBuffer, audioCtx, timeline, platform, finalTotalDur);
-
-                setStepBadge(3, 'ok', '3. Render: Done');
-                setBar(100, 'Completed');
-                document.getElementById('finalPlayer').src = URL.createObjectURL(finalBlob);
-                document.getElementById('outputSection').classList.remove('hidden');
-                document.getElementById('outputSection').scrollIntoView({ behavior: 'smooth' });
-
-            } catch (e) {
-                setBar(0, 'Stopped: ' + e.message);
-                alert(e.message);
-            } finally {
-                btn.disabled = false;
-                btn.classList.remove('opacity-50');
-            }
-        }
-
-        function renderVideoAccelerated(srcVid, audioBuffer, audioCtx, timeline, platform, totalDur) {
-            return new Promise(async (resolve) => {
-                const canvas = document.createElement('canvas');
-                if (platform === 'tiktok') {
-                    canvas.width = 540;
-                    canvas.height = 960;
-                } else {
-                    canvas.width = 960;
-                    canvas.height = 540;
-                }
-                const ctx = canvas.getContext('2d');
-
-                const hasVid = srcVid && srcVid.src && loadedVideoDuration > 0;
-                if (hasVid) {
-                    srcVid.currentTime = 0;
-                    srcVid.loop = true;
-                    srcVid.playbackRate = Math.max(0.5, Math.min(2.0, loadedVideoDuration / totalDur));
-                    await srcVid.play();
-                }
-
-                const stream = canvas.captureStream(24);
-                const dest = audioCtx.createMediaStreamDestination();
-                const srcNode = audioCtx.createBufferSource();
-                srcNode.buffer = audioBuffer;
-                if (audioBuffer.duration < totalDur && (totalDur / audioBuffer.duration) <= 1.15) {
-                    srcNode.playbackRate.value = audioBuffer.duration / totalDur;
-                }
-                srcNode.connect(dest);
-
-                const mixed = new MediaStream([...stream.getVideoTracks(), ...dest.stream.getAudioTracks()]);
-                let mime = 'video/mp4';
-                finalExt = 'mp4';
-                if (!MediaRecorder.isTypeSupported('video/mp4')) {
-                    mime = 'video/webm';
-                    finalExt = 'webm';
-                }
-
-                const recorder = new MediaRecorder(mixed, { mimeType: mime, videoBitsPerSecond: 2400000 });
-                const chunks = [];
-                recorder.ondataavailable = e => { if (e.data && e.data.size > 0) chunks.push(e.data); };
-                recorder.onstop = () => {
-                    if (hasVid) {
-                        srcVid.pause();
-                        srcVid.playbackRate = 1.0;
-                    }
-                    resolve(new Blob(chunks, { type: mime }));
-                };
-
-                recorder.start();
-                srcNode.start();
-
-                const t0 = performance.now();
-
-                const timer = setInterval(() => {
-                    const elapsed = (performance.now() - t0) / 1000;
-                    const remain = Math.max(0, Math.ceil(totalDur - elapsed));
-                    const pct = Math.min(99, 60 + Math.round((elapsed / totalDur) * 39));
-                    setBar(pct, `Step 3/3: Merging (${remain}s left)...`);
-
-                    if (elapsed >= totalDur) {
-                        clearInterval(timer);
-                        recorder.stop();
-                        return;
-                    }
-
-                    let idx = timeline.findIndex(item => elapsed >= item.start && elapsed < item.end);
-                    if (idx === -1) idx = timeline.length - 1;
-                    const seg = timeline[idx];
-
-                    const prog = Math.min(1, (elapsed - seg.start) / Math.max(0.1, seg.end - seg.start));
-                    const zoom = 1.05 + (prog * 0.05);
-                    drawCompositeFrame(ctx, canvas, srcVid, platform, seg.text, zoom);
-                }, 41);
-            });
-        }
-
-        function downloadOutput() {
-            if (!finalBlob) return;
-            const url = URL.createObjectURL(finalBlob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `Recap_${selectedVoice}.${finalExt}`;
-            document.body.appendChild(a);
-            a.click();
-            setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 400);
-        }
-
-        window.onload = () => updateLivePreview();
-    </script>
+      </div>
+    </main>
+  </div>
+  <div class="toast" id="toast" role="status"></div>
+
+  <script>
+    const VOICES = [
+      { name: 'Thiha', style: 'Burmese · ready', available: true },
+      { name: 'Puck', style: 'Upbeat · English studio', available: false },
+      { name: 'Charon', style: 'Informative · English studio', available: false },
+      { name: 'Fenrir', style: 'Excitable · English studio', available: false },
+      { name: 'Aoede', style: 'Breezy · English studio', available: false },
+      { name: 'Kore', style: 'Firm · English studio', available: false },
+      { name: 'Leda', style: 'Youthful · English studio', available: false }
+    ];
+    const state = { selectedVoice: 'Thiha', maskMode: 'auto', duration: 0, videoFile: null, audioBlob: null, finalBlob: null, finalExt: 'mp4', script: '', hooks: [], scenes: [], musicFile: null, sfxFile: null, tracks: { voice: true, music: false, sfx: false, lipsync: true } };
+    const $ = (id) => document.getElementById(id);
+    const sourceVideo = $('sourceVideo');
+    const previewAudio = $('audioPreview');
+    let toastTimer;
+
+    function showToast(message, type = '') { const el = $('toast'); el.textContent = message; el.className = `toast show ${type}`; clearTimeout(toastTimer); toastTimer = setTimeout(() => el.className = 'toast', 5000); }
+    function setProgress(step, status = 'done') { document.querySelectorAll('.progress-item').forEach((el) => { const order = ['analysis','screenplay','voice','layers','captions','review']; const idx = order.indexOf(el.dataset.progress); const stepIdx = order.indexOf(step); el.classList.toggle('done', status === 'done' && idx <= stepIdx); el.classList.toggle('running', status === 'running' && idx === stepIdx); }); }
+    function updateCounters() { $('sceneKpi').textContent = String(state.scenes.length).padStart(2,'0'); $('durationKpi').textContent = formatTime(state.duration); $('scriptCount').textContent = `${$('scriptOutput').value.length} characters`; }
+    function formatTime(seconds) { if (!Number.isFinite(seconds) || seconds <= 0) return '00:00'; const m = Math.floor(seconds / 60); const s = Math.floor(seconds % 60); return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`; }
+    function escapeHtml(value) { return String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[c])); }
+
+    function renderVoices() { $('voiceGrid').innerHTML = VOICES.map((voice) => `<button class="voice-card ${voice.name === state.selectedVoice ? 'selected' : ''} ${voice.available ? '' : 'locked'}" data-voice="${voice.name}"><span class="voice-name">${voice.name}</span><span class="voice-style">${voice.style}</span><span class="voice-status ${voice.available ? '' : 'lock'}"><i></i>${voice.available ? 'Provider ready' : 'Unavailable'}</span></button>`).join(''); document.querySelectorAll('[data-voice]').forEach((btn) => btn.addEventListener('click', () => selectVoice(btn.dataset.voice))); }
+    function selectVoice(name) { state.selectedVoice = name; renderVoices(); $('selectedVoiceLabel').textContent = `${name} selected`; if (!VOICES.find((v) => v.name === name)?.available) { const message = `${name} is not available in the current Burmese TTS provider. No fallback mapping was applied.`; $('voiceFeedback').textContent = message; $('voiceFeedback').className = 'voice-feedback error'; showToast(message, 'error'); return; } $('voiceFeedback').textContent = 'Thiha is the current Burmese provider voice. Preview uses the same server-side voice selected for rendering.'; $('voiceFeedback').className = 'voice-feedback'; }
+
+    async function previewVoice() { const voice = state.selectedVoice; const text = ($('scriptOutput').value.trim().split(/[။.!?\n]/).find(Boolean) || 'မင်္ဂလာပါ၊ RECAST မှာ ဇာတ်လမ်းအကျဉ်းကို အခုပဲ စတင်လိုက်ကြရအောင်။').trim(); $('previewVoiceBtn').disabled = true; $('voiceFeedback').textContent = `Checking ${voice} with the live provider...`; $('voiceFeedback').className = 'voice-feedback'; try { const res = await fetch(`/api/tts?voice=${encodeURIComponent(voice)}&pitch=${encodeURIComponent($('pitchRange').value)}&text=${encodeURIComponent(text)}`); if (!res.ok) { const data = await res.json().catch(() => ({})); throw new Error(data.error || 'TTS provider request failed'); } const blob = await res.blob(); state.audioBlob = blob; previewAudio.src = URL.createObjectURL(blob); $('voiceFeedback').textContent = `${voice} preview ready · ${res.headers.get('X-TTS-Engine') || 'server-side TTS'} · same voice locked for render`; $('voiceFeedback').className = 'voice-feedback success'; $('voiceTrackLabel').textContent = `${voice} · preview ready`; setProgress('voice'); await previewAudio.play().catch(() => {}); updateQc(); } catch (error) { $('voiceFeedback').textContent = error.message; $('voiceFeedback').className = 'voice-feedback error'; showToast(error.message, 'error'); } finally { $('previewVoiceBtn').disabled = false; } }
+
+    async function analyzeSource() { const title = $('videoTitle').value.trim(); const brief = $('analysisBrief').value.trim(); if (!state.videoFile && !title) { showToast('Upload a source video or add a film title/context before analysis.', 'error'); return; } $('analyzeBtn').disabled = true; $('scriptStatus').textContent = 'Analyzing frames...'; setProgress('analysis', 'running'); try { const frames = await extractFrames(); const res = await fetch('/api/script', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ sourceInfo: [title, brief].filter(Boolean).join(' · ') || state.videoFile?.name || 'Untitled film', durationSec: state.duration || 60, frames, lang:'Myanmar' }) }); const data = await res.json().catch(() => ({})); if (!res.ok || !data.script) throw new Error(data.error || 'Screenplay generation failed'); state.script = data.script.trim(); state.hooks = Array.isArray(data.hookOptions) && data.hookOptions.length ? data.hookOptions : ['The impossible detail', 'A warning too late', 'The hidden motive']; state.scenes = Array.isArray(data.scenes) && data.scenes.length ? data.scenes : splitScenes(state.script); $('scriptOutput').value = state.script; renderHooks(); renderScenes(); $('scriptStatus').textContent = `${state.scenes.length} chronological scenes`; $('sourceStatus').textContent = 'Chronology mapped'; setProgress('screenplay'); updateCounters(); updateQc(); document.querySelector('#screenplay').scrollIntoView({behavior:'smooth'}); showToast('Chronology mapped and Burmese screenplay ready.'); } catch (error) { $('scriptStatus').textContent = 'Analysis failed'; setProgress('analysis', 'done'); showToast(error.message, 'error'); } finally { $('analyzeBtn').disabled = false; } }
+    function splitScenes(script) { return script.split(/[\n။.!?]+/).map((text) => text.trim()).filter((text) => text.length > 5).slice(0, 24).map((narration, index) => ({ index:index+1, title:`Scene ${String(index+1).padStart(2,'0')}`, visual:'Chronological narration beat', narration, start: state.duration ? (index / Math.max(1, state.scenes.length || 8)) * state.duration : index * 6 })); }
+    function renderHooks() { $('hookList').innerHTML = state.hooks.slice(0,3).map((hook,index) => `<button class="chip-btn ${index === 0 ? 'active':''}" data-hook="${index}">${escapeHtml(hook)}</button>`).join(''); document.querySelectorAll('[data-hook]').forEach((b) => b.addEventListener('click', () => { document.querySelectorAll('[data-hook]').forEach(x=>x.classList.remove('active')); b.classList.add('active'); })); }
+    function renderScenes() { $('storyboard').innerHTML = state.scenes.map((scene,index) => `<div class="scene"><div class="scene-index">${String(index+1).padStart(2,'0')}</div><div><strong>${escapeHtml(scene.title || `Scene ${index+1}`)}</strong><p>${escapeHtml(scene.narration || scene.visual || 'Chronological scene beat')}</p></div><span class="scene-time">${formatTime(Number(scene.start) || (index * 6))}</span></div>`).join(''); }
+
+    async function extractFrames() { if (!state.videoFile || !sourceVideo.readyState) return []; const points = [0.08,0.25,0.42,0.60,0.78,0.92]; const canvas = document.createElement('canvas'); canvas.width = 320; canvas.height = 180; const ctx = canvas.getContext('2d'); const frames = []; for (const ratio of points) { sourceVideo.currentTime = ratio * state.duration; await new Promise((resolve) => { const done = () => { sourceVideo.removeEventListener('seeked', done); ctx.drawImage(sourceVideo,0,0,canvas.width,canvas.height); frames.push(canvas.toDataURL('image/jpeg',.58)); resolve(); }; sourceVideo.addEventListener('seeked', done); }); } return frames; }
+
+    function getLayout() { const subY = Number($('subY').value)/100; const subSize = Number($('subSize').value); const blur = Number($('blurStrength').value); const maskH = Number($('maskH').value)/100; const maskY = state.maskMode === 'auto' ? Math.max(.05, subY - maskH * .35) : Number($('maskY').value)/100; return { subY, subSize, blur, maskH, maskY, maskOpacity:Number($('maskOpacity').value)/100 }; }
+    function drawFrame(canvas) { const ctx = canvas.getContext('2d'); const vertical = $('platformPreset').value === 'tiktok'; canvas.width = vertical ? 540 : 960; canvas.height = vertical ? 960 : 540; const w=canvas.width,h=canvas.height; ctx.fillStyle='#10151f'; ctx.fillRect(0,0,w,h); if (sourceVideo.readyState >= 2 && sourceVideo.videoWidth) { const vw=sourceVideo.videoWidth,vh=sourceVideo.videoHeight; const sc=Math.max(w/vw,h/vh)*1.04; ctx.save(); ctx.filter=vertical?'blur(18px) brightness(.38)':'none'; ctx.drawImage(sourceVideo,(w-vw*sc)/2,(h-vh*sc)/2,vw*sc,vh*sc); ctx.restore(); ctx.filter='none'; if (vertical) { const fgW=w*1.04,fgH=vh/vw*fgW; ctx.drawImage(sourceVideo,(w-fgW)/2,(h-fgH)/2-h*.04,fgW,fgH); } } else { const g=ctx.createLinearGradient(0,0,w,h); g.addColorStop(0,'#232d23'); g.addColorStop(1,'#101620'); ctx.fillStyle=g; ctx.fillRect(0,0,w,h); ctx.fillStyle='rgba(216,255,79,.16)'; ctx.font='800 12px Manrope'; ctx.fillText('RECAST / FRAME PREVIEW',18,27); } const cfg=getLayout(); const boxW=w*.92,boxH=h*cfg.maskH,boxX=(w-boxW)/2,boxY=h*cfg.maskY; ctx.save(); ctx.beginPath(); ctx.roundRect(boxX,boxY,boxW,boxH,12); ctx.clip(); if (sourceVideo.readyState>=2 && cfg.blur>0) { ctx.filter=`blur(${Math.max(1,Math.round(cfg.blur*w/540))}px) brightness(.62)`; const vw=sourceVideo.videoWidth,vh=sourceVideo.videoHeight,sc=Math.max(w/vw,h/vh)*1.04; ctx.drawImage(sourceVideo,(w-vw*sc)/2,(h-vh*sc)/2,vw*sc,vh*sc); } ctx.filter='none'; ctx.fillStyle=`rgba(0,0,0,${cfg.maskOpacity})`; ctx.fillRect(boxX,boxY,boxW,boxH); ctx.restore(); const text = ($('scriptOutput').value.split(/[\n။.!?]/).filter(Boolean)[0] || 'နမူနာ မြန်မာစာတန်းထိုး နေရာနှင့် blur အနေအထား').trim(); ctx.font=`700 ${Math.round(cfg.subSize*.52*w/360)}px Padauk, sans-serif`; ctx.textAlign='center'; ctx.fillStyle='#eaff75'; ctx.fillText(text.slice(0,36),w/2,h*cfg.subY); }
+    function drawPreview(time = 0) { const canvas = $('previewCanvas'); drawFrame(canvas); }
+
+    async function loadAudio(file) { if (!file) return null; const ctx = new (window.AudioContext || window.webkitAudioContext)(); return ctx.decodeAudioData(await file.arrayBuffer()); }
+    async function renderFinal() { if (!state.videoFile || !sourceVideo.src) { showToast('A source video is required for final rendering.', 'error'); return; } if (!state.audioBlob) { showToast('Preview the selected voice first so the render uses a validated voiceover.', 'error'); return; } $('renderBtn').disabled=true; $('renderBtn').textContent='Rendering…'; setProgress('review','running'); try { const audioCtx = new (window.AudioContext || window.webkitAudioContext)(); const voiceBuffer = await audioCtx.decodeAudioData(await state.audioBlob.arrayBuffer()); const musicBuffer = state.tracks.music && state.musicFile ? await loadAudio(state.musicFile) : null; const sfxBuffer = state.tracks.sfx && state.sfxFile ? await loadAudio(state.sfxFile) : null; const total = Math.max(state.duration || 0, voiceBuffer.duration); const canvas=document.createElement('canvas'); const vertical=$('platformPreset').value==='tiktok'; canvas.width=vertical?540:960; canvas.height=vertical?960:540; sourceVideo.currentTime=0; sourceVideo.loop=true; await sourceVideo.play(); const videoStream=canvas.captureStream(24); const destination=audioCtx.createMediaStreamDestination(); const voiceNode=audioCtx.createBufferSource(); voiceNode.buffer=voiceBuffer; voiceNode.connect(destination); if (musicBuffer) { const node=audioCtx.createBufferSource(), gain=audioCtx.createGain(); node.buffer=musicBuffer; gain.gain.value=.16; node.connect(gain).connect(destination); node.start(0); } if (sfxBuffer) { const node=audioCtx.createBufferSource(), gain=audioCtx.createGain(); node.buffer=sfxBuffer; gain.gain.value=.35; node.connect(gain).connect(destination); node.start(0); } const mixed=new MediaStream([...videoStream.getVideoTracks(),...destination.stream.getAudioTracks()]); const mime=MediaRecorder.isTypeSupported('video/mp4')?'video/mp4':(MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus')?'video/webm;codecs=vp9,opus':'video/webm'); state.finalExt=mime.includes('mp4')?'mp4':'webm'; const recorder=new MediaRecorder(mixed,{mimeType:mime,videoBitsPerSecond:5200000}); const chunks=[]; recorder.ondataavailable=(e)=>e.data.size&&chunks.push(e.data); const done=new Promise((resolve)=>recorder.onstop=resolve); recorder.start(); voiceNode.start(0); const started=performance.now(); const timer=setInterval(()=>{ const elapsed=(performance.now()-started)/1000; const pct=Math.min(99,60+Math.round(elapsed/total*39)); const current=Math.min(state.duration||total,elapsed); if (sourceVideo.duration) sourceVideo.currentTime=current%sourceVideo.duration; drawFrame(canvas); if (elapsed>=total) { clearInterval(timer); recorder.stop(); sourceVideo.pause(); } $('renderBtn').textContent=`Rendering ${pct}%`; },41); await done; state.finalBlob=new Blob(chunks,{type:mime}); $('finalPlayer').src=URL.createObjectURL(state.finalBlob); $('output').classList.add('show'); $('renderBtn').textContent='Render final MP4 ↗'; $('renderBtn').disabled=false; setProgress('review'); updateQc(); showToast(`Final ${state.finalExt.toUpperCase()} render ready.`); } catch(error) { $('renderBtn').textContent='Render final MP4 ↗'; $('renderBtn').disabled=false; showToast(error.message || 'Render failed', 'error'); } }
+
+    function updateQc() { const checks={ source:state.duration>0, script:state.scenes.length>0 || $('scriptOutput').value.trim().length>15, voice:!!state.audioBlob, captions:true, export:typeof MediaRecorder!=='undefined' }; let passed=0; Object.entries(checks).forEach(([key,ok])=>{ const el=document.querySelector(`[data-qc="${key}"]`); el.classList.toggle('ok',ok); el.classList.toggle('warn',!ok); el.querySelector('.qc-mark').textContent=ok?'✓':'!'; if(ok) passed++; }); $('qcKpi').textContent=`${passed}/5`; $('qcStatus').textContent=`${passed}/5 checks passed`; }
+    function resetProject() { if (!confirm('Start a new project and clear this browser session?')) return; location.reload(); }
+
+    $('movieFile').addEventListener('change', (e) => { const file=e.target.files[0]; if(!file)return; state.videoFile=file; sourceVideo.src=URL.createObjectURL(file); $('uploadZone').classList.add('has-video'); $('sourceStatus').textContent=file.name; sourceVideo.onloadedmetadata=()=>{ state.duration=sourceVideo.duration||0; $('videoDurationBadge')?.remove(); updateCounters(); updateQc(); drawPreview(); }; sourceVideo.onloadeddata=()=>drawPreview(); });
+    $('analyzeBtn').addEventListener('click', analyzeSource); $('previewVoiceBtn').addEventListener('click', previewVoice); $('renderBtn').addEventListener('click', renderFinal); $('runQcBtn').addEventListener('click',()=>{updateQc(); showToast('QC pass complete. Resolve amber items before export.');}); $('newProjectBtn').addEventListener('click', resetProject); $('topExportBtn').addEventListener('click',()=>{ document.querySelector('#review').scrollIntoView({behavior:'smooth'}); if(state.finalBlob) $('downloadBtn').click(); }); $('downloadBtn').addEventListener('click',()=>{ if(!state.finalBlob)return; const a=document.createElement('a'); a.href=URL.createObjectURL(state.finalBlob); a.download=`RECAST_${state.selectedVoice}.${state.finalExt}`; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),500); }); $('copyScriptBtn').addEventListener('click',async()=>{ await navigator.clipboard?.writeText($('scriptOutput').value); showToast('Screenplay copied.'); }); $('scriptOutput').addEventListener('input',()=>{ updateCounters(); drawPreview(); updateQc(); }); $('pitchRange').addEventListener('input',()=> $('pitchValue').textContent=$('pitchRange').value); ['subY','subSize','blurStrength','maskH','maskY','maskOpacity'].forEach((id)=>$(id).addEventListener('input',()=>{ const map={subY:'subYVal',subSize:'subSizeVal',blurStrength:'blurVal',maskH:'maskHVal',maskY:'maskYVal',maskOpacity:'maskOpacityVal'}; const suffix=id==='subSize'?'px':'%'; $(map[id]).textContent=$(id).value+suffix; drawPreview(); })); document.querySelectorAll('[data-mask]').forEach((btn)=>btn.addEventListener('click',()=>{state.maskMode=btn.dataset.mask;document.querySelectorAll('[data-mask]').forEach(x=>x.classList.toggle('active',x===btn));$('customMaskControl').style.display=state.maskMode==='custom'?'block':'none';drawPreview();})); document.querySelectorAll('[data-track]').forEach((btn)=>btn.addEventListener('click',()=>{ const key=btn.dataset.track; state.tracks[key]=!state.tracks[key]; btn.classList.toggle('on',state.tracks[key]); })); $('musicFile').addEventListener('change',(e)=>{state.musicFile=e.target.files[0];$('musicName').textContent=state.musicFile?.name||'+ Add music bed';state.tracks.music=true;document.querySelector('[data-track="music"]').classList.add('on');}); $('sfxFile').addEventListener('change',(e)=>{state.sfxFile=e.target.files[0];$('sfxName').textContent=state.sfxFile?.name||'+ Add SFX layer';state.tracks.sfx=true;document.querySelector('[data-track="sfx"]').classList.add('on');}); document.querySelectorAll('.step-nav button').forEach((btn)=>btn.addEventListener('click',()=>{document.querySelector(`#${btn.dataset.target}`).scrollIntoView({behavior:'smooth'});document.querySelectorAll('.step-nav button').forEach(x=>x.classList.toggle('active',x===btn));}));
+    const observer=new IntersectionObserver((entries)=>entries.forEach((entry)=>{if(entry.isIntersecting){const nav=document.querySelector(`.step-nav button[data-target="${entry.target.id}"]`);if(nav){document.querySelectorAll('.step-nav button').forEach(x=>x.classList.remove('active'));nav.classList.add('active');}}}),{rootMargin:'-25% 0px -65% 0px'}); document.querySelectorAll('.section, #source').forEach((el)=>observer.observe(el));
+    renderVoices(); renderHooks(); updateCounters(); updateQc(); drawPreview();
+  </script>
 </body>
 </html>
