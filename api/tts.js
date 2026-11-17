@@ -1,76 +1,75 @@
-import WebSocket from 'ws';
-import crypto from 'crypto';
-
 export default async function handler(req, res) {
     const {
         text = 'မင်္ဂလာပါ',
-        voice = 'my-MM-ThihaNeural',
-        pitch = '+0Hz',
-        rate = '+0%'
+        voiceName = 'Puck',
+        style = 'natural storytelling'
     } = req.query;
 
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+        return res.status(400).json({ error: 'Vercel တွင် GEMINI_API_KEY မထည့်ရသေးပါ။' });
+    }
+
     try {
-        const audioBuffer = await synthesizeEdgeTTS(text, voice, pitch, rate);
-        res.setHeader('Content-Type', 'audio/mpeg');
-        res.setHeader('Access-Control-Allow-Origin', '*');
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{
+                    parts: [{
+                        text: `Read the following Burmese/text aloud naturally as a professional movie recap narrator (${style} tone). Output ONLY the spoken audio without adding any extra words:\n\n${text}`
+                    }]
+                }],
+                generationConfig: {
+                    responseModalities: ["AUDIO"],
+                    speechConfig: {
+                        voiceConfig: {
+                            prebuiltVoiceConfig: {
+                                voiceName: voiceName
+                            }
+                        }
+                    }
+                }
+            })
+        });
+
+        const data = await response.json();
+        const inlineData = data?.candidates?.[0]?.content?.parts?.[0]?.inlineData;
+
+        if (!inlineData || !inlineData.data) {
+            return res.status(500).json({ error: 'Gemini Audio generation failed', details: data });
+        }
+
+        const pcmBuffer = Buffer.from(inlineData.data, 'base64');
+        const wavBuffer = pcmToWav(pcmBuffer, 24000, 1, 16);
+
+        res.setHeader('Content-Type', 'audio/wav');
         res.setHeader('Cache-Control', 'public, max-age=86400');
-        return res.status(200).send(audioBuffer);
+        return res.status(200).send(wavBuffer);
     } catch (error) {
         return res.status(500).json({ error: error.message });
     }
 }
 
-function synthesizeEdgeTTS(text, voice, pitch, rate) {
-    return new Promise((resolve, reject) => {
-        const trustedClientToken = '6A5AA1D4EAFF4E9FB37E23D68491D6F4';
-        const reqId = crypto.randomUUID().replace(/-/g, '');
-        const url = `wss://speech.platform.bing.com/consumer/speech/synthesize/readaloud/edge/v1?TrustedClientToken=${trustedClientToken}&ConnectionId=${reqId}`;
+function pcmToWav(pcmData, sampleRate, numChannels, bitsPerSample) {
+    const byteRate = (sampleRate * numChannels * bitsPerSample) / 8;
+    const blockAlign = (numChannels * bitsPerSample) / 8;
+    const dataSize = pcmData.length;
+    const header = Buffer.alloc(44);
 
-        const ws = new WebSocket(url, {
-            headers: {
-                'Pragma': 'no-cache',
-                'Cache-Control': 'no-cache',
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36 Edg/122.0.0.0',
-                'Origin': 'chrome-extension://jdiccldimpdaibmpdkjnbmckianbfold'
-            }
-        });
+    header.write('RIFF', 0);
+    header.writeUInt32LE(36 + dataSize, 4);
+    header.write('WAVE', 8);
+    header.write('fmt ', 12);
+    header.writeUInt32LE(16, 16);
+    header.writeUInt16LE(1, 20);
+    header.writeUInt16LE(numChannels, 22);
+    header.writeUInt32LE(sampleRate, 24);
+    header.writeUInt32LE(byteRate, 28);
+    header.writeUInt16LE(blockAlign, 32);
+    header.writeUInt16LE(bitsPerSample, 34);
+    header.write('data', 36);
+    header.writeUInt32LE(dataSize, 40);
 
-        const chunks = [];
-        const timeout = setTimeout(() => {
-            ws.close();
-            reject(new Error('TTS timeout'));
-        }, 12000);
-
-        ws.on('open', () => {
-            const configMsg = `X-Timestamp:${new Date().toISOString()}\r\nContent-Type:application/json; charset=utf-8\r\nPath:speech.config\r\n\r\n{"context":{"synthesis":{"audio":{"metadataoptions":{"sentenceBoundaryEnabled":"false","wordBoundaryEnabled":"false"},"outputFormat":"audio-24khz-48kbitrate-mono-mp3"}}}}`;
-            ws.send(configMsg);
-
-            const cleanText = text.replace(/[<>&'"]/g, '');
-            const ssml = `<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='my-MM'><voice name='${voice}'><prosody pitch='${pitch}' rate='${rate}'>${cleanText}</prosody></voice></speak>`;
-            const ssmlMsg = `X-RequestId:${reqId}\r\nContent-Type:application/ssml+xml\r\nX-Timestamp:${new Date().toISOString()}\r\nPath:ssml\r\n\r\n${ssml}`;
-            ws.send(ssmlMsg);
-        });
-
-        ws.on('message', (data, isBinary) => {
-            if (isBinary) {
-                const separator = 'Path:audio\r\n';
-                const idx = data.indexOf(separator);
-                if (idx !== -1) {
-                    chunks.push(data.subarray(idx + separator.length));
-                }
-            } else {
-                const msg = data.toString();
-                if (msg.includes('Path:turn.end')) {
-                    clearTimeout(timeout);
-                    ws.close();
-                    resolve(Buffer.concat(chunks));
-                }
-            }
-        });
-
-        ws.on('error', (err) => {
-            clearTimeout(timeout);
-            reject(err);
-        });
-    });
+    return Buffer.concat([header, pcmData]);
 }
