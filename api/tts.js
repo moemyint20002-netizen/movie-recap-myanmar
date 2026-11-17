@@ -1,122 +1,226 @@
-export default async function handler(req, res) {
-    const {
-        text = 'မင်္ဂလာပါ',
-        voice = 'Thiha',
-        pitch = '0'
-    } = req.query;
+import type { IncomingMessage, ServerResponse } from "node:http";
 
-    const cleanText = text.replace(/[#*🔥🎬⚡\[\]]/g, '').trim();
-    const pitchVal = parseInt(pitch) || 0;
+/**
+ * RECAST TTS voice catalog.
+ *
+ * Only voices explicitly available from the selected Edge/Bing endpoint are
+ * marked as supported. The UI may display the full product catalog, but the
+ * API must not silently pretend that unsupported provider voice names are
+ * distinct voices.
+ */
+export const RECAST_VOICES = {
+  Thiha: {
+    id: "my-MM-ThihaNeural",
+    label: "Thiha",
+    language: "my-MM",
+    supported: true,
+    provider: "edge-burmese",
+  },
+  Nilar: {
+    id: "my-MM-NilarNeural",
+    label: "Nilar",
+    language: "my-MM",
+    supported: true,
+    provider: "edge-burmese",
+  },
+  Puck: {
+    id: null,
+    label: "Puck",
+    language: "en-US",
+    supported: false,
+    provider: "google-gemini",
+  },
+  Charon: {
+    id: null,
+    label: "Charon",
+    language: "en-US",
+    supported: false,
+    provider: "google-gemini",
+  },
+  Fenrir: {
+    id: null,
+    label: "Fenrir",
+    language: "en-US",
+    supported: false,
+    provider: "google-gemini",
+  },
+  Aoede: {
+    id: null,
+    label: "Aoede",
+    language: "en-US",
+    supported: false,
+    provider: "google-gemini",
+  },
+  Kore: {
+    id: null,
+    label: "Kore",
+    language: "en-US",
+    supported: false,
+    provider: "google-gemini",
+  },
+  Leda: {
+    id: null,
+    label: "Leda",
+    language: "en-US",
+    supported: false,
+    provider: "google-gemini",
+  },
+} as const;
 
-    // Map exact requested voice to genuine Neural Speaker
-    let voiceId = 'my-MM-ThihaNeural'; // Default Thiha
-    if (voice === 'Nilar' || voice === 'Aoede' || voice === 'Kore' || voice === 'Leda') {
-        voiceId = 'my-MM-NilarNeural';
-    } else if (voice === 'Thiha' || voice === 'Charon' || voice === 'Puck' || voice === 'Fenrir') {
-        voiceId = 'my-MM-ThihaNeural';
-    }
+export type RecastVoice = keyof typeof RECAST_VOICES;
 
-    try {
-        const audioBuffer = await synthesizeExactVoice(cleanText, voiceId, pitchVal);
-        if (audioBuffer && audioBuffer.length > 500) {
-            res.setHeader('Content-Type', 'audio/mpeg');
-            res.setHeader('X-TTS-Engine', `${voice}-Exact-Neural`);
-            return res.status(200).send(audioBuffer);
-        }
-    } catch (e) {
-        // Fallback to Gemini if network blocks Edge
-    }
+const DEFAULT_VOICE: RecastVoice = "Thiha";
+const MAX_TEXT_LENGTH = 4_000;
+const MIN_AUDIO_BYTES = 500;
+const EDGE_TTS_URL =
+  "https://speech.platform.bing.com/consumer/speech/synthesize/readaloud/readaloud/v1";
+const EDGE_TRUSTED_CLIENT_TOKEN = process.env.EDGE_TTS_TRUSTED_CLIENT_TOKEN;
 
-    // Gemini Native Voice Fallback if needed
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (apiKey) {
-        const geminiVoice = (voice === 'Thiha' || voice === 'Charon') ? 'Charon' : (voice === 'Nilar' ? 'Aoede' : voice);
-        try {
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    contents: [{ parts: [{ text: `Read aloud: "${cleanText}"` }] }],
-                    generationConfig: {
-                        responseModalities: ['AUDIO'],
-                        speechConfig: {
-                            voiceConfig: { prebuiltVoiceConfig: { voiceName: geminiVoice } }
-                        }
-                    }
-                })
-            });
-            const data = await response.json();
-            const audioPart = data?.candidates?.[0]?.content?.parts?.find(p => p.inlineData && p.inlineData.data);
-            if (audioPart && audioPart.inlineData.data) {
-                const rawBuffer = Buffer.from(audioPart.inlineData.data, 'base64');
-                const wavBuffer = pcmToWav(rawBuffer, 24000, 1, 16);
-                res.setHeader('Content-Type', 'audio/wav');
-                res.setHeader('X-TTS-Engine', `Gemini-${geminiVoice}`);
-                return res.status(200).send(wavBuffer);
-            }
-        } catch (err) {}
-    }
-
-    return res.status(500).json({ error: `Could not generate audio for ${voice}` });
+function json(res: ServerResponse, status: number, body: unknown): void {
+  res.statusCode = status;
+  res.setHeader("Content-Type", "application/json; charset=utf-8");
+  res.end(JSON.stringify(body));
 }
 
-async function synthesizeExactVoice(text, voiceName, pitchVal) {
-    let pitchStr = 'medium';
-    if (pitchVal < 0) pitchStr = `${pitchVal}%`;
-    else if (pitchVal > 0) pitchStr = `+${pitchVal}%`;
+function cleanText(value: unknown): string {
+  if (typeof value !== "string") return "";
 
-    const ssml = `<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='my-MM'>
-        <voice name='${voiceName}'>
-            <prosody pitch='${pitchStr}' rate='+0%'>${escapeXml(text)}</prosody>
-        </voice>
-    </speak>`;
+  return value
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "")
+    .replace(/[#*🔥🎬⚡\[\]]/gu, "")
+    .replace(/\s+/gu, " ")
+    .trim()
+    .slice(0, MAX_TEXT_LENGTH);
+}
 
-    const response = await fetch('https://speech.platform.bing.com/consumer/speech/synthesize/readaloud/edge/v1?TrustedClientToken=6A5AA1D4EAFF4E9FB37E23D68491D6F4', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/ssml+xml',
-            'X-Microsoft-OutputFormat': 'audio-24khz-48kbitrate-mono-mp3',
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36 Edg/126.0.0.0'
-        },
-        body: ssml
+function parseVoice(value: unknown): RecastVoice {
+  const candidate = typeof value === "string" ? value : DEFAULT_VOICE;
+  return Object.hasOwn(RECAST_VOICES, candidate)
+    ? (candidate as RecastVoice)
+    : DEFAULT_VOICE;
+}
+
+function parsePitch(value: unknown): number {
+  const parsed = Number(value ?? 0);
+  if (!Number.isFinite(parsed)) return 0;
+  return Math.max(-20, Math.min(20, Math.trunc(parsed)));
+}
+
+function escapeXml(value: string): string {
+  return value.replace(/[<>&'\"]/g, character => {
+    const entities: Record<string, string> = {
+      "<": "&lt;",
+      ">": "&gt;",
+      "&": "&amp;",
+      "'": "&apos;",
+      '"': "&quot;",
+    };
+    return entities[character] ?? character;
+  });
+}
+
+function pitchValue(pitch: number): string {
+  if (pitch === 0) return "medium";
+  return `${pitch > 0 ? "+" : ""}${pitch}%`;
+}
+
+function requestQuery(req: IncomingMessage): URLSearchParams {
+  const host = req.headers.host ?? "localhost";
+  const protocol = (req.headers["x-forwarded-proto"] as string | undefined) ?? "http";
+  return new URL(req.url ?? "/", `${protocol}://${host}`).searchParams;
+}
+
+async function synthesizeThiha(text: string, pitch: number): Promise<Buffer> {
+  if (!EDGE_TRUSTED_CLIENT_TOKEN) {
+    throw new Error("TTS service is not configured: EDGE_TTS_TRUSTED_CLIENT_TOKEN is missing");
+  }
+
+  const ssml = [
+    "<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='my-MM'>",
+    "<voice name='my-MM-ThihaNeural'>",
+    `<prosody pitch='${pitchValue(pitch)}' rate='+0%'>${escapeXml(text)}</prosody>`,
+    "</voice>",
+    "</speak>",
+  ].join("");
+
+  const response = await fetch(
+    `${EDGE_TTS_URL}?TrustedClientToken=${encodeURIComponent(EDGE_TRUSTED_CLIENT_TOKEN)}`,
+    {
+      method: "POST",
+      headers: {
+        Accept: "audio/mpeg",
+        "Content-Type": "application/ssml+xml",
+        "X-Microsoft-OutputFormat": "audio-24khz-48kbitrate-mono-mp3",
+        "User-Agent": "RECAST/1.0",
+      },
+      body: ssml,
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error(`TTS provider returned HTTP ${response.status}`);
+  }
+
+  const audio = Buffer.from(await response.arrayBuffer());
+  if (audio.length < MIN_AUDIO_BYTES) {
+    throw new Error("TTS provider returned an empty or incomplete audio response");
+  }
+  return audio;
+}
+
+/**
+ * Node-compatible handler. Mount this route as GET /api/tts.
+ *
+ * Supported query parameters:
+ *   text=မင်္ဂလာပါ
+ *   voice=Thiha
+ *   pitch=-10..20
+ */
+export default async function handler(
+  req: IncomingMessage,
+  res: ServerResponse,
+): Promise<void> {
+  if (req.method !== "GET") {
+    res.setHeader("Allow", "GET");
+    return json(res, 405, { error: "Method not allowed" });
+  }
+
+  const query = requestQuery(req);
+  const text = cleanText(query.get("text") ?? "မင်္ဂလာပါ");
+  const voice = parseVoice(query.get("voice"));
+  const pitch = parsePitch(query.get("pitch"));
+  const voiceConfig = RECAST_VOICES[voice];
+
+  if (!text) {
+    return json(res, 400, { error: "Text is required" });
+  }
+
+  if (!voiceConfig.supported || voice !== "Thiha") {
+    return json(res, 422, {
+      error: `${voice} is not available in the current Burmese TTS engine`,
+      voice,
+      supportedVoices: ["Thiha", "Nilar"],
+      nextStep:
+        "Configure a compatible provider adapter before enabling this voice in production.",
     });
+  }
 
-    if (!response.ok) throw new Error(`Neural TTS HTTP ${response.status}`);
-    return Buffer.from(await response.arrayBuffer());
-}
-
-function escapeXml(unsafe) {
-    return unsafe.replace(/[<>&'"]/g, (c) => {
-        switch (c) {
-            case '<': return '&lt;';
-            case '>': return '&gt;';
-            case '&': return '&amp;';
-            case '\'': return '&apos;';
-            case '"': return '&quot;';
-        }
+  try {
+    const audio = await synthesizeThiha(text, pitch);
+    res.statusCode = 200;
+    res.setHeader("Content-Type", "audio/mpeg");
+    res.setHeader("Content-Length", audio.byteLength.toString());
+    res.setHeader("Cache-Control", "no-store");
+    res.setHeader("X-TTS-Engine", "edge-burmese");
+    res.setHeader("X-TTS-Voice", "Thiha");
+    res.end(audio);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown TTS error";
+    console.error("[RECAST TTS]", message);
+    return json(res, 502, {
+      error: "Voice generation failed",
+      detail: message,
+      voice: "Thiha",
     });
-}
-
-function pcmToWav(pcmData, sampleRate, numChannels, bitsPerSample) {
-    const byteRate = (sampleRate * numChannels * bitsPerSample) / 8;
-    const blockAlign = (numChannels * bitsPerSample) / 8;
-    const dataSize = pcmData.length;
-    const buffer = Buffer.alloc(44 + dataSize);
-
-    buffer.write('RIFF', 0);
-    buffer.writeUInt32LE(36 + dataSize, 4);
-    buffer.write('WAVE', 8);
-    buffer.write('fmt ', 12);
-    buffer.writeUInt32LE(16, 16);
-    buffer.writeUInt16LE(1, 20);
-    buffer.writeUInt16LE(numChannels, 22);
-    buffer.writeUInt32LE(sampleRate, 24);
-    buffer.writeUInt32LE(byteRate, 28);
-    buffer.writeUInt16LE(blockAlign, 32);
-    buffer.writeUInt16LE(bitsPerSample, 34);
-    buffer.write('data', 36);
-    buffer.writeUInt32LE(dataSize, 40);
-    pcmData.copy(buffer, 44);
-
-    return buffer;
+  }
 }
