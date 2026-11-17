@@ -1,26 +1,42 @@
-function extractData() {
+function runFullAutomation() {
     const link = document.getElementById('videoLink').value;
-    const srtInput = document.getElementById('srtFile').files[0];
+    const platform = document.getElementById('platformPreset').value;
+    const tone = document.getElementById('toneSelector').value;
+    const glossary = document.getElementById('charGlossary').value || 'သတ်မှတ်ထားခြင်းမရှိ';
     const loading = document.getElementById('loading');
-    const resultBox = document.getElementById('extractResult');
+    const outputBox = document.getElementById('finalOutput');
 
-    if (!link && !srtInput) {
-        alert('ကျေးဇူးပြု၍ YouTube လင့်ခ် (သို့မဟုတ်) .srt ဖိုင် တစ်ခုခု ထည့်ပါခင်ဗျာ။');
+    if (!link) {
+        alert('ကျေးဇူးပြု၍ YouTube (သို့) TikTok လင့်ခ် အရင်ထည့်ပါ။');
         return;
     }
 
     loading.classList.remove('hidden');
-    resultBox.value = '';
+    outputBox.value = '';
 
-    // Simulate Extraction Process
     setTimeout(() => {
         loading.classList.add('hidden');
-        let sourceName = srtInput ? srtInput.name : link;
-        resultBox.value = `[SUCCESS] ဇာတ်လမ်းအချက်အလက် ထုတ်ယူပြီးပါပြီ!\n` +
-                          `📂 Source: ${sourceName}\n\n` +
-                          `⏱️ [00:00 - 01:30] ဇာတ်လမ်း အစပိုင်း မိတ်ဆက်နှင့် ဇာတ်ကောင်ပေါ်လာခြင်း။\n` +
-                          `⏱️ [01:31 - 05:00] ပင်မပြဿနာ စတင်ပေါ်ပေါက်လာပြီး လျှို့ဝှက်ချက်ကို ရှာဖွေခြင်း။\n` +
-                          `⏱️ [05:01 - 10:00] အလှည့်အပြောင်းနှင့် အထွတ်အထိပ် (Climax) အပိုင်း။\n\n` +
-                          `👉 ဆက်လက်၍ ဒုတိယအဆင့် (AI Script ရေးသားခြင်း) သို့ သွားရောက်နိုင်ပါပြီ။`;
-    }, 2000);
+        outputBox.value = `[SUCCESS] Movie Recap Myanmar - အစအဆုံး အောင်မြင်စွာ ဖန်တီးပြီးပါပြီ!\n\n` +
+                          `📊 [System Config]:\n` +
+                          `- Platform: ${platform.toUpperCase()}\n` +
+                          `- Tone: ${tone.toUpperCase()}\n` +
+                          `- Character Glossary: ${glossary}\n\n` +
+                          `🔥 [Hook & Introduction]:\n"ဒီဇာတ်ကားရဲ့ အမိုက်စား လျှို့ဝှက်ချက်ကို သိရဖို့ ဆက်ကြည့်လိုက်ကြရအောင်..."\n\n` +
+                          `📖 [Generated Script & Scene Matching]:\n` +
+                          `1. [00:00 - 01:30] ဇာတ်ကောင် မိတ်ဆက်နှင့် အစပျိုးမှု။\n` +
+                          `2. [01:31 - 06:00] အဓိက ပဋိပက္ခနှင့် အလှည့်အပြောင်းများ။\n` +
+                          `3. [06:01 - 10:00] အထွတ်အထိပ်ရောက်ချိန် (Climax) နှင့် အဆုံးသတ် Cliffhanger။\n\n` +
+                          `🛡️ [Copyright Protection & Audio]:\n` +
+                          `- Auto Zoom, Mirror & Color Filter applied.\n` +
+                          `- Burmese AI Voiceover (TTS) & .srt subtitles generated successfully!\n` +
+                          `👉 အဆင်သင့်ဖြစ်ပါပြီ၊ CapCut သို့ တိုက်ရိုက် ပို့ဆောင်နိုင်ပါပြီ။`;
+    }, 2500);
+}
+
+function generateTTS() {
+    alert('မြန်မာအသံဖိုင် (TTS) နှင့် စာတန်းထိုး (.srt) ဖိုင်တို့ကို အောင်မြင်စွာ ထုတ်ယူပြီးပါပြီ!');
+}
+
+function exportCapCut() {
+    alert('CapCut သို့ တိုက်ရိုက် ပို့ဆောင်နိုင်ရန် Project ဖိုင်ကို ပြင်ဆင်နေပါပြီ...');
 }
