@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Movie Recap Myanmar - AI Video Generator</title>
+    <title>Movie Recap Myanmar - AI System v2.0</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
@@ -15,74 +15,23 @@
             <i class="fa-solid fa-clapperboard text-red-500 text-2xl"></i>
             <span class="text-xl font-bold tracking-wide">Movie Recap <span class="text-red-500">Myanmar</span></span>
         </div>
-        <span class="text-sm bg-red-600 px-3 py-1 rounded-full font-semibold">AI Powered v1.0</span>
+        <span class="text-sm bg-red-600 px-3 py-1 rounded-full font-semibold">Step 1: Input & Extraction</span>
     </nav>
 
     <!-- Main Container -->
     <div class="max-w-5xl mx-auto p-6 mt-6">
         
-        <!-- Input Section -->
+        <!-- Step 1: Input & Extraction Section -->
         <div class="bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-700 mb-6">
-            <h2 class="text-lg font-semibold mb-4 text-red-400"><i class="fa-solid fa-link mr-2"></i> ၁။ ဇာတ်လမ်းလင့်ခ် (သို့) အချက်အလက်ထည့်ရန်</h2>
-            <div class="flex flex-col md:flex-row gap-4">
-                <input type="text" id="videoLink" placeholder="YouTube Link သို့မဟုတ် .srt ဖိုင် ထည့်ပါ..." class="flex-1 bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 focus:outline-none focus:border-red-500 text-white">
-                <button onclick="generateRecap()" class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-semibold transition flex items-center justify-center">
-                    <i class="fa-solid fa-wand-magic-sparkles mr-2"></i> Script စတင်ဖန်တီးမည်
-                </button>
-            </div>
-        </div>
-
-        <!-- Settings & Customization -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-            <div class="bg-gray-800 p-5 rounded-xl border border-gray-700">
-                <label class="block text-sm font-medium mb-2 text-gray-300">ပလက်ဖောင်း (Platform)</label>
-                <select id="platform" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2.5 text-white">
-                    <option value="tiktok">TikTok / Shorts (၁ မိနစ်စာ)</option>
-                    <option value="youtube">YouTube (၁၀ မိနစ်စာ)</option>
-                </select>
-            </div>
-            <div class="bg-gray-800 p-5 rounded-xl border border-gray-700">
-                <label class="block text-sm font-medium mb-2 text-gray-300">အသံနေအသံထား (Tone)</label>
-                <select id="tone" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2.5 text-white">
-                    <option value="suspense">စိတ်လှုပ်ရှားစရာ (Suspense)</option>
-                    <option value="funny">ဟာသနှောထားသော (Funny)</option>
-                    <option value="calm">အေးအေးဆေးဆေး (Calm)</option>
-                </select>
-            </div>
-            <div class="bg-gray-800 p-5 rounded-xl border border-gray-700">
-                <label class="block text-sm font-medium mb-2 text-gray-300">မူပိုင်ခွင့် ကာကွယ်ခြင်း (Copyright)</label>
-                <div class="flex items-center mt-3">
-                    <input type="checkbox" id="copyrightBypass" checked class="w-5 h-5 text-red-600 bg-gray-900 border-gray-700 rounded">
-                    <span class="ml-2 text-sm text-gray-300">Auto Zoom & Filter ထည့်မည်</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Output Result Section -->
-        <div class="bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-700">
-            <h2 class="text-lg font-semibold mb-4 text-green-400"><i class="fa-solid fa-file-lines mr-2"></i> ၂။ ထွက်လာမည့် မြန်မာ Script နှင့် အသံဖိုင်</h2>
+            <h2 class="text-lg font-semibold mb-4 text-red-400"><i class="fa-solid fa-file-arrow-up mr-2"></i> ၁။ ဇာတ်လမ်းအချက်အလက် ထည့်သွင်းခြင်း (Input & Extraction)</h2>
             
-            <div id="loading" class="hidden text-center py-8">
-                <i class="fa-solid fa-spinner fa-spin text-red-500 text-3xl mb-2"></i>
-                <p class="text-gray-400">AI မှ ဇာတ်လမ်းကို မြန်မာဘာသာဖြင့် ပြန်ဆိုနေပါပြီ...</p>
-            </div>
-
-            <div id="outputContainer" class="space-y-4">
-                <textarea id="resultScript" rows="8" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-4 text-gray-200 focus:outline-none" placeholder="Script ရလဒ်များ ဤနေရာတွင် ပေါ်လာပါမည်..."></textarea>
-                
-                <div class="flex justify-end space-x-3">
-                    <button onclick="playTTS()" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg font-medium text-sm flex items-center">
-                        <i class="fa-solid fa-volume-high mr-2"></i> အသံဖိုင်ထုတ်ရန် (TTS)
-                    </button>
-                    <button onclick="exportCapCut()" class="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg font-medium text-sm flex items-center">
-                        <i class="fa-solid fa-download mr-2"></i> CapCut သို့ ပို့မည်
-                    </button>
+            <div class="space-y-4">
+                <!-- Video Link Input -->
+                <div>
+                    <label class="block text-sm font-medium mb-2 text-gray-300">YouTube / TikTok ဗီဒီယိုလင့်ခ် ထည့်ရန်</label>
+                    <input type="text" id="videoLink" placeholder="https://www.youtube.com/watch?v=..." class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 focus:outline-none focus:border-red-500 text-white">
                 </div>
-            </div>
-        </div>
 
-    </div>
-
-    <script src="app.js"></script>
-</body>
-</html>
+                <!-- SRT Upload -->
+                <div>
+                    <label class="block text-sm font-medium mb-2 text-gray-300">(.srt သို့မဟုတ် .v
