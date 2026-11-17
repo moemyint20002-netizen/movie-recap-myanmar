@@ -1,35 +1,51 @@
 export default async function handler(req, res) {
     const {
         text = 'မင်္ဂလာပါ',
-        voice = 'Puck',
+        voice = 'Thiha',
         pitch = '0'
     } = req.query;
 
-    const apiKey = process.env.GEMINI_API_KEY;
-    const pitchVal = parseInt(pitch) || 0;
-    const toneInstruction = pitchVal < -15
-        ? 'Speak in a deep, warm, cinematic male narrator tone.'
-        : pitchVal > 15
-        ? 'Speak in a bright, expressive, youthful tone.'
-        : 'Speak naturally like a professional Burmese movie recap storyteller.';
-
-    // 1. Try Gemini Native TTS first (Single Request for full script)
-    if (apiKey) {
+    // 1. Genuine Burmese Neural Voices (Microsoft Edge TTS: Thiha & Nilar)
+    if (voice === 'Thiha' || voice === 'Nilar') {
         try {
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`, {
+            const voiceId = voice === 'Thiha' ? 'my-MM-ThihaNeural' : 'my-MM-NilarNeural';
+            const audioBuffer = await synthesizeEdgeNeural(text, voiceId, pitch);
+            if (audioBuffer && audioBuffer.length > 500) {
+                res.setHeader('Content-Type', 'audio/mpeg');
+                res.setHeader('X-TTS-Engine', `${voice}-Neural`);
+                return res.status(200).send(audioBuffer);
+            }
+        } catch (err) {
+            // Fall through to Gemini Native Audio if Edge TTS is blocked
+        }
+    }
+
+    // 2. Genuine Gemini Native Voices (Puck, Charon, Fenrir, Aoede, Kore, Leda)
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+        return res.status(400).json({ error: 'GEMINI_API_KEY မရှိပါ' });
+    }
+
+    const geminiVoice = (voice === 'Thiha') ? 'Charon' : (voice === 'Nilar') ? 'Aoede' : voice;
+    const models = ['gemini-2.5-flash-preview-tts', 'gemini-3.8-flash'];
+    let lastError = 'Audio generation failed';
+
+    for (const model of models) {
+        try {
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     contents: [{
                         parts: [{
-                            text: `${toneInstruction} Pause briefly at each sentence break. Read aloud clearly and naturally: "${text}"`
+                            text: `Speak naturally like a Burmese movie recap narrator. Read aloud clearly without adding commentary: "${text}"`
                         }]
                     }],
                     generationConfig: {
                         responseModalities: ['AUDIO'],
                         speechConfig: {
                             voiceConfig: {
-                                prebuiltVoiceConfig: { voiceName: voice }
+                                prebuiltVoiceConfig: { voiceName: geminiVoice }
                             }
                         }
                     }
@@ -44,56 +60,53 @@ export default async function handler(req, res) {
                 const rawBuffer = Buffer.from(audioPart.inlineData.data, 'base64');
                 const wavBuffer = pcmToWav(rawBuffer, 24000, 1, 16);
                 res.setHeader('Content-Type', 'audio/wav');
-                res.setHeader('X-TTS-Engine', 'Gemini-Native');
+                res.setHeader('X-TTS-Engine', `Gemini-${geminiVoice}`);
                 return res.status(200).send(wavBuffer);
             }
+            lastError = data?.error?.message || lastError;
         } catch (e) {
-            // Fall through to backup engine if quota exceeded
+            lastError = e.message;
         }
     }
 
-    // 2. Automatic Backup Burmese TTS when Gemini Free Tier 10/day quota is reached
-    try {
-        const chunks = splitTextChunks(text, 180);
-        const mp3Buffers = [];
-
-        for (const chunk of chunks) {
-            const url = `https://translate.googleapis.com/translate_tts?ie=UTF-8&client=gtx&tl=my&q=${encodeURIComponent(chunk)}`;
-            const ttsRes = await fetch(url, {
-                headers: { 'User-Agent': 'Mozilla/5.0' }
-            });
-            if (ttsRes.ok) {
-                mp3Buffers.push(Buffer.from(await ttsRes.arrayBuffer()));
-            }
-        }
-
-        if (mp3Buffers.length > 0) {
-            const combined = Buffer.concat(mp3Buffers);
-            res.setHeader('Content-Type', 'audio/mpeg');
-            res.setHeader('X-TTS-Engine', 'Backup-MM');
-            return res.status(200).send(combined);
-        }
-    } catch (err) {
-        return res.status(500).json({ error: err.message });
-    }
-
-    return res.status(500).json({ error: 'TTS generation failed' });
+    return res.status(500).json({ error: lastError });
 }
 
-function splitTextChunks(str, maxLen) {
-    const parts = str.split(/(?<=[။\.!?])\s*/);
-    const chunks = [];
-    let current = '';
-    for (const p of parts) {
-        if ((current + ' ' + p).length > maxLen) {
-            if (current) chunks.push(current.trim());
-            current = p;
-        } else {
-            current = current ? (current + ' ' + p) : p;
-        }
+// Genuine Microsoft Edge Neural TTS (my-MM-ThihaNeural & my-MM-NilarNeural)
+async function synthesizeEdgeNeural(text, voiceName, pitch) {
+    const pitchHz = `${parseInt(pitch) || 0}Hz`;
+    const ssml = `<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='my-MM'>
+        <voice name='${voiceName}'>
+            <prosody pitch='${pitchHz}' rate='+0%'>${escapeXml(text)}</prosody>
+        </voice>
+    </speak>`;
+
+    const response = await fetch('https://speech.platform.bing.com/consumer/speech/synthesize/readaloud/edge/v1?TrustedClientToken=6A5AA1D4EAFF4E9FB37E23D68491D6F4', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/ssml+xml',
+            'X-Microsoft-OutputFormat': 'audio-24khz-48kbitrate-mono-mp3',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36 Edg/126.0.0.0'
+        },
+        body: ssml
+    });
+
+    if (!response.ok) {
+        throw new Error(`Edge TTS HTTP ${response.status}`);
     }
-    if (current) chunks.push(current.trim());
-    return chunks.length ? chunks : [str.slice(0, maxLen)];
+    return Buffer.from(await response.arrayBuffer());
+}
+
+function escapeXml(unsafe) {
+    return unsafe.replace(/[<>&'"]/g, (c) => {
+        switch (c) {
+            case '<': return '&lt;';
+            case '>': return '&gt;';
+            case '&': return '&amp;';
+            case '\'': return '&apos;';
+            case '"': return '&quot;';
+        }
+    });
 }
 
 function pcmToWav(pcmData, sampleRate, numChannels, bitsPerSample) {
