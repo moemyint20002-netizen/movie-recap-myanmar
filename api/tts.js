@@ -5,40 +5,38 @@ export default async function handler(req, res) {
         pitch = '0'
     } = req.query;
 
-    // 1. Try Microsoft Edge Neural TTS First for Thiha & Nilar
-    if (voice === 'Thiha' || voice === 'Nilar') {
+    const cleanText = text.replace(/[#*🔥🎬⚡\[\]]/g, '').trim();
+
+    // 1. Force High-Quality Natural Male Narrator via Microsoft Edge Neural (Thiha / Charon)
+    if (voice === 'Thiha' || voice === 'Charon' || voice === 'Puck' || voice === 'Fenrir') {
         try {
-            const voiceId = voice === 'Thiha' ? 'my-MM-ThihaNeural' : 'my-MM-NilarNeural';
-            const audioBuffer = await synthesizeEdgeNeural(text, voiceId, pitch);
-            if (audioBuffer && audioBuffer.length > 500) {
+            const voiceId = (voice === 'Nilar' || voice === 'Aoede' || voice === 'Kore' || voice === 'Leda') 
+                ? 'my-MM-NilarNeural' 
+                : 'my-MM-ThihaNeural';
+            
+            const audioBuffer = await synthesizeNaturalNeural(cleanText, voiceId, pitch);
+            if (audioBuffer && audioBuffer.length > 1000) {
                 res.setHeader('Content-Type', 'audio/mpeg');
-                res.setHeader('X-TTS-Engine', `${voice}-Neural`);
+                res.setHeader('X-TTS-Engine', 'Natural-Human-Neural');
                 return res.status(200).send(audioBuffer);
             }
         } catch (e) {
-            // Fall through to Gemini Native Audio
+            // Fallback to Gemini Native Audio
         }
     }
 
-    // 2. Try Gemini Native Voices with multiple model fallbacks (Bypasses High Demand limits)
+    // 2. Gemini Native Audio Fallback
     const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-        return res.status(400).json({ error: 'GEMINI_API_KEY မရှိပါ' });
-    }
-
-    const geminiVoice = (voice === 'Thiha') ? 'Charon' : (voice === 'Nilar') ? 'Aoede' : voice;
-    const models = ['gemini-2.5-flash', 'gemini-3.8-flash', 'gemini-2.5-flash-preview-tts'];
-    let lastError = 'Audio generation failed';
-
-    for (const model of models) {
+    if (apiKey) {
+        const geminiVoice = (voice === 'Thiha' || voice === 'Charon') ? 'Charon' : voice;
         try {
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     contents: [{
                         parts: [{
-                            text: `Read aloud clearly and naturally without extra commentary: "${text}"`
+                            text: `Speak deeply, warmly, and naturally like a professional human movie recap narrator. Read aloud: "${cleanText}"`
                         }]
                     }],
                     generationConfig: {
@@ -60,31 +58,28 @@ export default async function handler(req, res) {
                 const rawBuffer = Buffer.from(audioPart.inlineData.data, 'base64');
                 const wavBuffer = pcmToWav(rawBuffer, 24000, 1, 16);
                 res.setHeader('Content-Type', 'audio/wav');
-                res.setHeader('X-TTS-Engine', `Gemini-${geminiVoice}`);
+                res.setHeader('X-TTS-Engine', 'Gemini-Human-Voice');
                 return res.status(200).send(wavBuffer);
             }
-            lastError = data?.error?.message || lastError;
-        } catch (err) {
-            lastError = err.message;
-        }
+        } catch (err) {}
     }
 
-    // 3. Ultimate Fallback to Google Translate TTS if Gemini is busy
+    // 3. Ultimate Fallback to Standard Natural Voice
     try {
-        const url = `https://translate.googleapis.com/translate_tts?ie=UTF-8&client=gtx&tl=my&q=${encodeURIComponent(text.slice(0, 200))}`;
+        const url = `https://translate.googleapis.com/translate_tts?ie=UTF-8&client=gtx&tl=my&q=${encodeURIComponent(cleanText.slice(0, 250))}`;
         const ttsRes = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
         if (ttsRes.ok) {
             const buf = Buffer.from(await ttsRes.arrayBuffer());
             res.setHeader('Content-Type', 'audio/mpeg');
-            res.setHeader('X-TTS-Engine', 'Fallback-GTX');
+            res.setHeader('X-TTS-Engine', 'Standard-Voice');
             return res.status(200).send(buf);
         }
     } catch (err) {}
 
-    return res.status(500).json({ error: lastError });
+    return res.status(500).json({ error: 'Voice generation failed' });
 }
 
-async function synthesizeEdgeNeural(text, voiceName, pitch) {
+async function synthesizeNaturalNeural(text, voiceName, pitch) {
     const pitchHz = `${parseInt(pitch) || 0}Hz`;
     const ssml = `<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='my-MM'>
         <voice name='${voiceName}'>
@@ -102,7 +97,7 @@ async function synthesizeEdgeNeural(text, voiceName, pitch) {
         body: ssml
     });
 
-    if (!response.ok) throw new Error(`Edge TTS HTTP ${response.status}`);
+    if (!response.ok) throw new Error(`Neural TTS HTTP ${response.status}`);
     return Buffer.from(await response.arrayBuffer());
 }
 
