@@ -1,61 +1,357 @@
-let selectedVoice = 'Thiha';
-let selectedLang = 'Myanmar';
-
-function setLang(lang) {
-    selectedLang = lang;
-    ['Myanmar', 'English', 'Thai', 'Chinese'].forEach(l => {
-        const btn = document.getElementById('lang' + l);
-        if (l === lang) {
-            btn.className = "px-4 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-semibold";
-        } else {
-            btn.className = "px-4 py-1.5 rounded-lg bg-gray-800 text-gray-300 text-xs font-semibold hover:bg-gray-700";
+<!DOCTYPE html>
+<html lang="my">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Myanmar Movie Recap Studio - Pro Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Padauk:wght@400;700&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+        
+        body {
+            font-family: 'Plus Jakarta Sans', 'Padauk', sans-serif;
+            background: radial-gradient(circle at 15% 15%, #1e1b4b 0%, #090d16 45%, #030508 100%);
+            min-height: 100vh;
         }
-    });
-}
 
-function selectVoice(element, voiceName) {
-    selectedVoice = voiceName;
-    document.querySelectorAll('.voice-btn').forEach(b => {
-        b.className = "voice-btn bg-gray-950 border border-gray-800 p-2.5 rounded-xl text-center hover:border-gray-600 transition";
-        b.querySelector('p:last-child').className = "text-[10px] text-gray-400";
-    });
-    element.className = "voice-btn bg-blue-600/20 border border-blue-500 p-2.5 rounded-xl text-center transition";
-    element.querySelector('p:last-child').className = "text-[10px] text-blue-400";
-}
+        .glass-card {
+            background: rgba(17, 24, 39, 0.72);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.6);
+        }
 
-function startFullStudio() {
-    const fileInput = document.getElementById('movieFile').files[0];
-    if (!fileInput) {
-        alert('ကျေးဇူးပြု၍ ပထမဆုံး Movie Video ဖိုင်ကို အရင် Upload တင်ပေးပါခင်ဗျာ။');
-        return;
-    }
+        .voice-card-active {
+            background: linear-gradient(145deg, rgba(59, 130, 246, 0.25), rgba(147, 51, 234, 0.25)) !important;
+            border: 1.5px solid #60a5fa !important;
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.35);
+            transform: translateY(-2px);
+        }
 
-    // Reset status
-    for (let i = 2; i <= 6; i++) {
-        const span = document.getElementById(`status${i}`);
-        span.className = "text-xs bg-yellow-600/20 text-yellow-400 px-3 py-1 rounded-full animate-pulse";
-        span.innerText = "Processing...";
-    }
-    document.getElementById('exportCard').classList.add('hidden');
+        /* Sound Wave Animation */
+        .wave-bar {
+            width: 3px;
+            height: 12px;
+            background: #60a5fa;
+            border-radius: 99px;
+            animation: soundWave 0.6s infinite ease-in-out alternate;
+        }
+        .wave-bar:nth-child(2) { animation-delay: 0.2s; height: 18px; }
+        .wave-bar:nth-child(3) { animation-delay: 0.4s; height: 10px; }
 
-    // Step-by-step Simulation with selected Voice
-    setTimeout(() => { updateStatus(2, "Completed"); }, 1500);
-    setTimeout(() => { updateStatus(3, "Completed"); }, 3000);
-    setTimeout(() => { updateStatus(4, `Done (${selectedVoice})`); }, 4500);
-    setTimeout(() => { updateStatus(5, "Completed"); }, 6000);
-    setTimeout(() => {
-        updateStatus(6, "Completed");
-        document.getElementById('exportCard').classList.remove('hidden');
-        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-    }, 7500);
-}
+        @keyframes soundWave {
+            0% { transform: scaleY(0.4); }
+            100% { transform: scaleY(1.3); }
+        }
 
-function updateStatus(step, text) {
-    const span = document.getElementById(`status${step}`);
-    span.className = "text-xs bg-green-600/20 text-green-400 px-3 py-1 rounded-full font-semibold";
-    span.innerHTML = `<i class="fa-solid fa-check mr-1"></i> ${text}`;
-}
+        /* Custom Range Slider */
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 18px;
+            width: 18px;
+            border-radius: 50%;
+            background: #38bdf8;
+            cursor: pointer;
+            box-shadow: 0 0 10px #38bdf8;
+        }
+    </style>
+</head>
+<body class="text-slate-100 pb-16">
 
-function downloadVideo() {
-    alert('ဗီဒီယိုဖိုင်ကို Download ဆွဲယူနေပါပြီ...');
-}
+    <!-- Top Pro Navigation Bar -->
+    <nav class="sticky top-0 z-50 glass-card border-b border-slate-800/80 px-5 py-3.5">
+        <div class="max-w-4xl mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-purple-600 to-rose-500 flex items-center justify-center shadow-lg shadow-purple-500/30">
+                    <i class="fa-solid fa-film text-white text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="text-base md:text-lg font-extrabold tracking-tight bg-gradient-to-r from-amber-300 via-rose-400 to-purple-400 bg-clip-text text-transparent">
+                        AI Myanmar Movie Recap Studio
+                    </h1>
+                    <p class="text-[11px] text-slate-400">Professional Automation Suite</p>
+                </div>
+            </div>
+            <span class="px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-emerald-500/20 to-teal-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span> Fully Automatic
+            </span>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="max-w-3xl mx-auto px-4 mt-6 space-y-5">
+
+        <!-- STEP 1: Upload & Source -->
+        <div class="glass-card rounded-2xl p-5 border-l-4 border-l-blue-500">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div class="flex items-center space-x-3.5">
+                    <div class="w-11 h-11 rounded-full bg-blue-600/20 border border-blue-500/50 text-blue-400 flex items-center justify-center font-extrabold text-lg shrink-0">
+                        1
+                    </div>
+                    <div>
+                        <h2 class="font-bold text-base text-white">Upload Movie / Link ထည့်ရန်</h2>
+                        <p class="text-xs text-slate-400">MP4 ဗီဒီယိုဖိုင် တင်ပါ သို့မဟုတ် YouTube/TikTok လင့်ခ်ထည့်ပါ</p>
+                    </div>
+                </div>
+                <label class="cursor-pointer bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-lg shadow-blue-600/30 transition flex items-center justify-center gap-2 shrink-0">
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                    <span id="fileLabel">ဖိုင်ရွေးချယ်မည် (MP4 / SRT)</span>
+                    <input type="file" id="movieFile" class="hidden" onchange="handleFileSelect(this)">
+                </label>
+            </div>
+            <div class="mt-3 pt-3 border-t border-slate-800/80 flex flex-col sm:flex-row gap-2">
+                <input type="text" id="videoLink" placeholder="သို့မဟုတ် YouTube / TikTok Link ဒီမှာထည့်ပါ..." class="flex-1 bg-slate-950/80 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500">
+                <select id="platformPreset" class="bg-slate-950/80 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none">
+                    <option value="tiktok">TikTok / Shorts (9:16 - ၁ မိနစ်)</option>
+                    <option value="youtube">YouTube (16:9 - ၁၀ မိနစ်)</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- SELECT DUBBING VOICES STUDIO PANEL -->
+        <div class="glass-card rounded-2xl p-5 border border-purple-500/30 space-y-5">
+            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3.5">
+                <div class="flex items-center space-x-2.5">
+                    <div class="w-8 h-8 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center">
+                        <i class="fa-solid fa-microphone-lines"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-extrabold text-sm tracking-wider text-white uppercase">Select Dubbing Voices</h3>
+                        <p class="text-[11px] text-slate-400">အသံကတ်ကို ထောက်လိုက်ရုံဖြင့် နမူနာအသံ ချက်ချင်းကြားရပါမည်</p>
+                    </div>
+                </div>
+
+                <!-- Live Sound Indicator -->
+                <div id="audioStatusBadge" class="hidden items-center space-x-2 bg-blue-500/20 border border-blue-500/40 px-3 py-1 rounded-full">
+                    <div class="flex items-center space-x-1">
+                        <span class="wave-bar"></span>
+                        <span class="wave-bar"></span>
+                        <span class="wave-bar"></span>
+                    </div>
+                    <span id="playingVoiceLabel" class="text-[11px] font-bold text-blue-300">Playing...</span>
+                </div>
+            </div>
+
+            <!-- Language Tabs -->
+            <div class="grid grid-cols-4 gap-2 bg-slate-950/90 p-1.5 rounded-xl border border-slate-800/80">
+                <button onclick="setLang('Myanmar')" id="langMyanmar" class="lang-btn py-2 rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 text-white text-xs font-bold shadow">Myanmar</button>
+                <button onclick="setLang('English')" id="langEnglish" class="lang-btn py-2 rounded-lg text-slate-400 hover:text-white text-xs font-bold transition">English</button>
+                <button onclick="setLang('Thai')" id="langThai" class="lang-btn py-2 rounded-lg text-slate-400 hover:text-white text-xs font-bold transition">Thai</button>
+                <button onclick="setLang('Chinese')" id="langChinese" class="lang-btn py-2 rounded-lg text-slate-400 hover:text-white text-xs font-bold transition">Chinese</button>
+            </div>
+
+            <!-- Voice Pitch Control -->
+            <div class="bg-slate-950/90 p-4 rounded-xl border border-slate-800 space-y-2.5">
+                <div class="flex justify-between items-center">
+                    <span class="text-xs font-bold text-slate-200 flex items-center gap-2">
+                        <i class="fa-solid fa-sliders text-sky-400"></i>
+                        Voice Pitch (အသံ ကြီး/သေး)
+                        <span class="text-[10px] text-sky-400 font-normal">(Live Preview)</span>
+                    </span>
+                    <div class="flex items-center space-x-2">
+                        <span id="pitchVal" class="bg-sky-500/20 border border-sky-500/40 text-sky-300 text-xs font-extrabold px-2.5 py-0.5 rounded-md">0</span>
+                        <button onclick="resetPitch()" class="text-[11px] bg-slate-800 hover:bg-slate-700 text-slate-300 px-2.5 py-1 rounded-md transition">
+                            <i class="fa-solid fa-rotate-left mr-1"></i>Reset
+                        </button>
+                    </div>
+                </div>
+                <input type="range" id="pitchRange" min="-50" max="50" value="0" oninput="updatePitchDisplay(this.value)" onchange="previewCurrentVoice()" class="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer">
+                <div class="flex justify-between text-[10px] text-slate-400 font-medium">
+                    <span>Low (-50 ယောက်ျားသံ ဩဩ)</span>
+                    <span>0 (မူရင်းအသံ)</span>
+                    <span>High (+50 မိန်းကလေးသံ စူးစူး)</span>
+                </div>
+            </div>
+
+            <!-- Male Voices Grid -->
+            <div class="space-y-2.5">
+                <p class="text-xs font-bold text-amber-400 flex items-center gap-1.5">
+                    <i class="fa-solid fa-user-tie"></i> ယောက်ျားလေး ဇာတ်ကောင်အသံ [Male Role - 9 Voices]
+                </p>
+                <div class="grid grid-cols-3 gap-2.5">
+                    <button onclick="selectAndPlayVoice(this, 'Thiha', 'MM Male', 'male', 0.92)" class="voice-btn voice-card-active bg-slate-900/90 border border-slate-800 p-3 rounded-xl text-center transition relative group">
+                        <i class="fa-solid fa-volume-high text-[10px] text-blue-400 absolute top-2 right-2"></i>
+                        <div class="w-9 h-9 mx-auto mb-1.5 rounded-full bg-blue-500/20 flex items-center justify-center text-base">🧑🏻</div>
+                        <p class="text-xs font-bold text-white">Thiha</p>
+                        <p class="text-[10px] text-sky-400 font-semibold">MM Male</p>
+                    </button>
+
+                    <button onclick="selectAndPlayVoice(this, 'Puck', 'Upbeat', 'male', 1.08)" class="voice-btn bg-slate-900/90 border border-slate-800 p-3 rounded-xl text-center hover:border-slate-600 transition relative group">
+                        <i class="fa-solid fa-volume-high text-[10px] text-slate-500 group-hover:text-blue-400 absolute top-2 right-2"></i>
+                        <div class="w-9 h-9 mx-auto mb-1.5 rounded-full bg-amber-500/20 flex items-center justify-center text-base">👦🏻</div>
+                        <p class="text-xs font-bold text-white">Puck</p>
+                        <p class="text-[10px] text-slate-400">Upbeat</p>
+                    </button>
+
+                    <button onclick="selectAndPlayVoice(this, 'Charon', 'Narrator', 'male', 0.85)" class="voice-btn bg-slate-900/90 border border-slate-800 p-3 rounded-xl text-center hover:border-slate-600 transition relative group">
+                        <i class="fa-solid fa-volume-high text-[10px] text-slate-500 group-hover:text-blue-400 absolute top-2 right-2"></i>
+                        <div class="w-9 h-9 mx-auto mb-1.5 rounded-full bg-purple-500/20 flex items-center justify-center text-base">🧔🏻</div>
+                        <p class="text-xs font-bold text-white">Charon</p>
+                        <p class="text-[10px] text-slate-400">Narrator</p>
+                    </button>
+
+                    <button onclick="selectAndPlayVoice(this, 'Fenrir', 'Dramatic', 'male', 0.78)" class="voice-btn bg-slate-900/90 border border-slate-800 p-3 rounded-xl text-center hover:border-slate-600 transition relative group">
+                        <i class="fa-solid fa-volume-high text-[10px] text-slate-500 group-hover:text-blue-400 absolute top-2 right-2"></i>
+                        <div class="w-9 h-9 mx-auto mb-1.5 rounded-full bg-rose-500/20 flex items-center justify-center text-base">👨🏻‍🎤</div>
+                        <p class="text-xs font-bold text-white">Fenrir</p>
+                        <p class="text-[10px] text-slate-400">Dramatic</p>
+                    </button>
+
+                    <button onclick="selectAndPlayVoice(this, 'Orus', 'Firm', 'male', 0.88)" class="voice-btn bg-slate-900/90 border border-slate-800 p-3 rounded-xl text-center hover:border-slate-600 transition relative group">
+                        <i class="fa-solid fa-volume-high text-[10px] text-slate-500 group-hover:text-blue-400 absolute top-2 right-2"></i>
+                        <div class="w-9 h-9 mx-auto mb-1.5 rounded-full bg-emerald-500/20 flex items-center justify-center text-base">🕵🏻‍♂️</div>
+                        <p class="text-xs font-bold text-white">Orus</p>
+                        <p class="text-[10px] text-slate-400">Firm</p>
+                    </button>
+
+                    <button onclick="selectAndPlayVoice(this, 'Gacrux', 'Storyteller', 'male', 0.95)" class="voice-btn bg-slate-900/90 border border-slate-800 p-3 rounded-xl text-center hover:border-slate-600 transition relative group">
+                        <i class="fa-solid fa-volume-high text-[10px] text-slate-500 group-hover:text-blue-400 absolute top-2 right-2"></i>
+                        <div class="w-9 h-9 mx-auto mb-1.5 rounded-full bg-cyan-500/20 flex items-center justify-center text-base">🧙🏻‍♂️</div>
+                        <p class="text-xs font-bold text-white">Gacrux</p>
+                        <p class="text-[10px] text-slate-400">Storyteller</p>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Female Voices Grid -->
+            <div class="space-y-2.5 pt-2">
+                <p class="text-xs font-bold text-pink-400 flex items-center gap-1.5">
+                    <i class="fa-solid fa-user"></i> မိန်းကလေး ဇာတ်ကောင်အသံ [Female Role - 6 Voices]
+                </p>
+                <div class="grid grid-cols-3 gap-2.5">
+                    <button onclick="selectAndPlayVoice(this, 'Nilar', 'MM Female', 'female', 1.18)" class="voice-btn bg-slate-900/90 border border-slate-800 p-3 rounded-xl text-center hover:border-slate-600 transition relative group">
+                        <i class="fa-solid fa-volume-high text-[10px] text-slate-500 group-hover:text-pink-400 absolute top-2 right-2"></i>
+                        <div class="w-9 h-9 mx-auto mb-1.5 rounded-full bg-pink-500/20 flex items-center justify-center text-base">👩🏻</div>
+                        <p class="text-xs font-bold text-white">Nilar</p>
+                        <p class="text-[10px] text-slate-400">MM Female</p>
+                    </button>
+
+                    <button onclick="selectAndPlayVoice(this, 'Aoede', 'Sweet & Soft', 'female', 1.25)" class="voice-btn bg-slate-900/90 border border-slate-800 p-3 rounded-xl text-center hover:border-slate-600 transition relative group">
+                        <i class="fa-solid fa-volume-high text-[10px] text-slate-500 group-hover:text-pink-400 absolute top-2 right-2"></i>
+                        <div class="w-9 h-9 mx-auto mb-1.5 rounded-full bg-rose-500/20 flex items-center justify-center text-base">👧🏻</div>
+                        <p class="text-xs font-bold text-white">Aoede</p>
+                        <p class="text-[10px] text-slate-400">Sweet & Soft</p>
+                    </button>
+
+                    <button onclick="selectAndPlayVoice(this, 'Kore', 'Energetic', 'female', 1.32)" class="voice-btn bg-slate-900/90 border border-slate-800 p-3 rounded-xl text-center hover:border-slate-600 transition relative group">
+                        <i class="fa-solid fa-volume-high text-[10px] text-slate-500 group-hover:text-pink-400 absolute top-2 right-2"></i>
+                        <div class="w-9 h-9 mx-auto mb-1.5 rounded-full bg-fuchsia-500/20 flex items-center justify-center text-base">👩🏻‍🎤</div>
+                        <p class="text-xs font-bold text-white">Kore</p>
+                        <p class="text-[10px] text-slate-400">Energetic</p>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- AUTOMATION PIPELINE (Steps 2 to 6) -->
+        <div class="space-y-2.5">
+            <div class="glass-card p-3.5 rounded-xl flex items-center justify-between">
+                <div class="flex items-center space-x-3.5">
+                    <div class="w-8 h-8 rounded-full bg-indigo-500/20 border border-indigo-500/40 text-indigo-400 flex items-center justify-center font-bold text-sm">2</div>
+                    <div>
+                        <h4 class="font-bold text-xs md:text-sm text-white">AI Movie Analysis</h4>
+                        <p class="text-[11px] text-slate-400">Scene, ဇာတ်ကောင်၊ ဇာတ်လမ်းကို ခွဲခြမ်းစိတ်ဖြာမည်</p>
+                    </div>
+                </div>
+                <span id="status2" class="text-[11px] bg-slate-800/90 text-slate-400 px-3 py-1 rounded-full font-semibold">Ready</span>
+            </div>
+
+            <div class="glass-card p-3.5 rounded-xl flex items-center justify-between">
+                <div class="flex items-center space-x-3.5">
+                    <div class="w-8 h-8 rounded-full bg-purple-500/20 border border-purple-500/40 text-purple-400 flex items-center justify-center font-bold text-sm">3</div>
+                    <div>
+                        <h4 class="font-bold text-xs md:text-sm text-white">Recap Script Writing</h4>
+                        <p class="text-[11px] text-slate-400">သဘာဝကျပြီး စိတ်ဝင်စားဖွယ် မြန်မာဇာတ်ကြောင်းရေးမည်</p>
+                    </div>
+                </div>
+                <span id="status3" class="text-[11px] bg-slate-800/90 text-slate-400 px-3 py-1 rounded-full font-semibold">Ready</span>
+            </div>
+
+            <div class="glass-card p-3.5 rounded-xl flex items-center justify-between">
+                <div class="flex items-center space-x-3.5">
+                    <div class="w-8 h-8 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-400 flex items-center justify-center font-bold text-sm">4</div>
+                    <div>
+                        <h4 class="font-bold text-xs md:text-sm text-white">Burmese AI Voice</h4>
+                        <p class="text-[11px] text-slate-400">ရွေးချယ်ထားသော အသံဖြင့် Narration ထုတ်မည်</p>
+                    </div>
+                </div>
+                <span id="status4" class="text-[11px] bg-slate-800/90 text-slate-400 px-3 py-1 rounded-full font-semibold">Ready</span>
+            </div>
+
+            <div class="glass-card p-3.5 rounded-xl flex items-center justify-between">
+                <div class="flex items-center space-x-3.5">
+                    <div class="w-8 h-8 rounded-full bg-pink-500/20 border border-pink-500/40 text-pink-400 flex items-center justify-center font-bold text-sm">5</div>
+                    <div>
+                        <h4 class="font-bold text-xs md:text-sm text-white">Subtitle Auto Add</h4>
+                        <p class="text-[11px] text-slate-400">မြန်မာစာတန်းထိုးကို အလိုအလျောက် တပ်ဆင်မည်</p>
+                    </div>
+                </div>
+                <span id="status5" class="text-[11px] bg-slate-800/90 text-slate-400 px-3 py-1 rounded-full font-semibold">Ready</span>
+            </div>
+
+            <div class="glass-card p-3.5 rounded-xl flex items-center justify-between">
+                <div class="flex items-center space-x-3.5">
+                    <div class="w-8 h-8 rounded-full bg-rose-500/20 border border-rose-500/40 text-rose-400 flex items-center justify-center font-bold text-sm">6</div>
+                    <div>
+                        <h4 class="font-bold text-xs md:text-sm text-white">AI Video Editing & Copyright Shield</h4>
+                        <p class="text-[11px] text-slate-400">Scene ရွေးချယ်ခြင်း၊ Auto Zoom/Filter နှင့် အသံပေါင်းစပ်ခြင်း</p>
+                    </div>
+                </div>
+                <span id="status6" class="text-[11px] bg-slate-800/90 text-slate-400 px-3 py-1 rounded-full font-semibold">Ready</span>
+            </div>
+        </div>
+
+        <!-- MASTER ACTION BUTTON -->
+        <button onclick="startFullStudio()" class="w-full bg-gradient-to-r from-blue-600 via-purple-600 to-rose-600 hover:brightness-110 active:scale-[0.99] text-white py-4 rounded-2xl font-extrabold text-base md:text-lg shadow-xl shadow-purple-600/30 transition flex items-center justify-center space-x-2.5">
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+            <span>အလိုအလျောက် Recap Video စတင်ဖန်တီးမည်</span>
+        </button>
+
+        <!-- STEP 7: EXPORT MP4 RESULT CARD -->
+        <div id="exportCard" class="hidden glass-card border-2 border-emerald-500/70 p-5 rounded-2xl shadow-2xl shadow-emerald-500/10 space-y-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-full bg-emerald-500 text-slate-950 flex items-center justify-center font-extrabold text-lg">7</div>
+                    <div>
+                        <h3 class="font-extrabold text-emerald-400 text-base md:text-lg">Export MP4 - အဆင်သင့်ဖြစ်ပါပြီ!</h3>
+                        <p class="text-xs text-slate-300">ရွေးချယ်ထားသောအသံ: <span id="finalVoiceUsed" class="text-sky-400 font-bold">Thiha</span></p>
+                    </div>
+                </div>
+                <span class="text-xs bg-emerald-500/20 text-emerald-300 px-3 py-1 rounded-full font-bold border border-emerald-500/30">1080p HD</span>
+            </div>
+
+            <!-- Generated Script Box -->
+            <div class="bg-slate-950/90 p-3.5 rounded-xl border border-slate-800">
+                <p class="text-[11px] font-bold text-amber-400 mb-1.5"><i class="fa-solid fa-scroll mr-1"></i> AI ဖန်တီးပေးထားသော မြန်မာ Recap Script:</p>
+                <textarea id="generatedScriptBox" rows="4" class="w-full bg-transparent text-xs text-slate-200 leading-relaxed focus:outline-none"></textarea>
+            </div>
+
+            <div class="bg-slate-950/80 p-4 rounded-xl border border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div class="flex items-center space-x-3.5">
+                    <div class="w-20 h-14 bg-gradient-to-br from-rose-600 to-purple-800 rounded-xl flex items-center justify-center text-white text-lg shadow-inner">
+                        <i class="fa-solid fa-play"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-sm font-bold text-white">Myanmar_Movie_Recap_HD.mp4</h4>
+                        <div class="flex flex-wrap gap-2 text-[10px] text-emerald-400 font-semibold mt-1">
+                            <span><i class="fa-solid fa-circle-check mr-1"></i>HD Quality</span>
+                            <span><i class="fa-solid fa-circle-check mr-1"></i>MM Subtitle</span>
+                            <span><i class="fa-solid fa-circle-check mr-1"></i>Copyright Safe</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex gap-2 w-full sm:w-auto">
+                    <button onclick="downloadVideo()" class="flex-1 sm:flex-initial bg-emerald-500 hover:bg-emerald-400 text-slate-950 px-5 py-2.5 rounded-xl font-extrabold text-xs shadow-lg shadow-emerald-500/25 transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-download"></i> Download MP4
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
