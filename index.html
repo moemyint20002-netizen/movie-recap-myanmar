@@ -68,20 +68,32 @@
         <!-- 2. Voice -->
         <section class="panel rounded-2xl p-4 space-y-3">
             <div class="flex items-center justify-between">
-                <span class="text-xs font-extrabold uppercase tracking-wider text-slate-400">2. Voice</span>
+                <span class="text-xs font-extrabold uppercase tracking-wider text-slate-400">2. Voice (Tap to Preview)</span>
                 <span id="selectedVoiceBadge" class="text-xs font-bold text-sky-400">Puck</span>
             </div>
             <div class="grid grid-cols-3 sm:grid-cols-6 gap-2">
-                <button type="button" onclick="pickVoice(this, 'Puck')" class="voice-btn voice-active bg-slate-900 border border-slate-800 py-2.5 rounded-xl text-xs font-bold">Puck</button>
-                <button type="button" onclick="pickVoice(this, 'Charon')" class="voice-btn bg-slate-900 border border-slate-800 py-2.5 rounded-xl text-xs font-bold">Charon</button>
-                <button type="button" onclick="pickVoice(this, 'Fenrir')" class="voice-btn bg-slate-900 border border-slate-800 py-2.5 rounded-xl text-xs font-bold">Fenrir</button>
-                <button type="button" onclick="pickVoice(this, 'Aoede')" class="voice-btn bg-slate-900 border border-slate-800 py-2.5 rounded-xl text-xs font-bold">Aoede</button>
-                <button type="button" onclick="pickVoice(this, 'Kore')" class="voice-btn bg-slate-900 border border-slate-800 py-2.5 rounded-xl text-xs font-bold">Kore</button>
-                <button type="button" onclick="pickVoice(this, 'Leda')" class="voice-btn bg-slate-900 border border-slate-800 py-2.5 rounded-xl text-xs font-bold">Leda</button>
+                <button type="button" onclick="pickVoice(this, 'Puck')" class="voice-btn voice-active bg-slate-900 border border-slate-800 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-volume-high text-[10px]"></i> Puck
+                </button>
+                <button type="button" onclick="pickVoice(this, 'Charon')" class="voice-btn bg-slate-900 border border-slate-800 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-volume-high text-[10px]"></i> Charon
+                </button>
+                <button type="button" onclick="pickVoice(this, 'Fenrir')" class="voice-btn bg-slate-900 border border-slate-800 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-volume-high text-[10px]"></i> Fenrir
+                </button>
+                <button type="button" onclick="pickVoice(this, 'Aoede')" class="voice-btn bg-slate-900 border border-slate-800 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-volume-high text-[10px]"></i> Aoede
+                </button>
+                <button type="button" onclick="pickVoice(this, 'Kore')" class="voice-btn bg-slate-900 border border-slate-800 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-volume-high text-[10px]"></i> Kore
+                </button>
+                <button type="button" onclick="pickVoice(this, 'Leda')" class="voice-btn bg-slate-900 border border-slate-800 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-volume-high text-[10px]"></i> Leda
+                </button>
             </div>
         </section>
 
-        <!-- 3. Subtitle & Blur Studio (Live Preview + Full Control) -->
+        <!-- 3. Subtitle & Blur Studio -->
         <section class="panel rounded-2xl p-4 space-y-4">
             <div class="flex items-center justify-between">
                 <span class="text-xs font-extrabold uppercase tracking-wider text-slate-400">3. Subtitle & Blur Mask</span>
@@ -98,7 +110,6 @@
 
             <!-- Controls Grid -->
             <div class="grid grid-cols-2 gap-3 text-xs">
-                <!-- Subtitle Y Position -->
                 <div class="bg-slate-950 p-3 rounded-xl border border-slate-800/80 space-y-1.5">
                     <div class="flex justify-between text-[11px] text-slate-400">
                         <span>Subtitle Y</span>
@@ -107,7 +118,6 @@
                     <input type="range" id="subY" min="15" max="92" value="78" oninput="syncControls()" class="w-full">
                 </div>
 
-                <!-- Subtitle Size -->
                 <div class="bg-slate-950 p-3 rounded-xl border border-slate-800/80 space-y-1.5">
                     <div class="flex justify-between text-[11px] text-slate-400">
                         <span>Text Size</span>
@@ -116,7 +126,6 @@
                     <input type="range" id="subSize" min="18" max="48" value="30" oninput="syncControls()" class="w-full">
                 </div>
 
-                <!-- Blur Strength -->
                 <div class="bg-slate-950 p-3 rounded-xl border border-slate-800/80 space-y-1.5">
                     <div class="flex justify-between text-[11px] text-slate-400">
                         <span>Blur Strength</span>
@@ -125,7 +134,6 @@
                     <input type="range" id="blurStrength" min="0" max="40" value="18" oninput="syncControls()" class="w-full">
                 </div>
 
-                <!-- Mask Height (Zoom/Scale) -->
                 <div class="bg-slate-950 p-3 rounded-xl border border-slate-800/80 space-y-1.5">
                     <div class="flex justify-between text-[11px] text-slate-400">
                         <span>Mask Height</span>
@@ -135,7 +143,7 @@
                 </div>
             </div>
 
-            <!-- Custom Mask Extra Sliders (Shown when Custom is active) -->
+            <!-- Custom Mask Extra Sliders -->
             <div id="customMaskPanel" class="hidden grid grid-cols-2 gap-3 text-xs pt-1 border-t border-slate-800/80">
                 <div class="bg-slate-950 p-3 rounded-xl border border-slate-800/80 space-y-1.5">
                     <div class="flex justify-between text-[11px] text-slate-400">
@@ -172,7 +180,7 @@
                 </div>
             </div>
 
-            <!-- Live Verification Box (Script + Audio Check) -->
+            <!-- Live Verification Box -->
             <div id="verifyBox" class="hidden space-y-2 pt-2 border-t border-slate-800">
                 <textarea id="scriptOutput" rows="3" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 focus:outline-none"></textarea>
                 <audio id="audioVerifyPlayer" controls class="w-full h-8"></audio>
@@ -207,12 +215,35 @@
         let maskMode = 'auto';
         let finalBlob = null;
         let finalExt = 'mp4';
+        let previewAudio = new Audio();
 
-        function pickVoice(el, name) {
+        async function pickVoice(el, name) {
             selectedVoice = name;
-            document.getElementById('selectedVoiceBadge').innerText = name;
+            const badge = document.getElementById('selectedVoiceBadge');
+            badge.innerText = `${name} (Loading...)`;
             document.querySelectorAll('.voice-btn').forEach(b => b.classList.remove('voice-active'));
             el.classList.add('voice-active');
+
+            try {
+                previewAudio.pause();
+                previewAudio.currentTime = 0;
+                const sampleText = 'မင်္ဂလာပါ၊ ဒီဇာတ်ကားရဲ့ လျှို့ဝှက်ချက်တွေကို အခုပဲ အတူတူ ကြည့်လိုက်ကြရအောင်။';
+                const res = await fetch(`/api/tts?voice=${encodeURIComponent(name)}&text=${encodeURIComponent(sampleText)}`);
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    badge.innerText = `${name} (Error)`;
+                    alert('Voice Error: ' + (err.error || 'TTS API Failed'));
+                    return;
+                }
+                const blob = await res.blob();
+                const url = URL.createObjectURL(blob);
+                previewAudio.src = url;
+                badge.innerText = `${name} (Playing...)`;
+                previewAudio.onended = () => { badge.innerText = name; };
+                await previewAudio.play();
+            } catch (e) {
+                badge.innerText = name;
+            }
         }
 
         function setMaskMode(mode) {
@@ -261,7 +292,6 @@
             const blurStrength = parseInt(document.getElementById('blurStrength').value);
             const maskH = parseInt(document.getElementById('maskH').value) / 100;
 
-            // Auto mode locks mask directly behind subtitle position; Custom allows free X/Y/W/H
             const maskY = maskMode === 'auto' ? Math.max(0.05, subY - (maskH * 0.35)) : (parseInt(document.getElementById('maskY').value) / 100);
             const maskW = maskMode === 'auto' ? 0.92 : (parseInt(document.getElementById('maskW').value) / 100);
 
@@ -281,14 +311,12 @@
                 const vw = srcVid.videoWidth;
                 const vh = srcVid.videoHeight;
                 if (platform === 'tiktok') {
-                    // Blurred ambient background
                     ctx.save();
                     ctx.filter = 'blur(20px) brightness(0.45)';
                     const bgScale = Math.max(w / vw, h / vh);
                     ctx.drawImage(srcVid, (w - vw * bgScale) / 2, (h - vh * bgScale) / 2, vw * bgScale, vh * bgScale);
                     ctx.restore();
 
-                    // Sharp foreground clip
                     const fgW = w * zoomFactor;
                     const fgH = (vh / vw) * fgW;
                     ctx.drawImage(srcVid, (w - fgW) / 2, (h - fgH) / 2 - (h * 0.04), fgW, fgH);
@@ -304,7 +332,6 @@
                 ctx.fillRect(0, 0, w, h);
             }
 
-            // Draw Blur Mask (Covers original hardsubs & creates clean backdrop)
             const boxW = w * cfg.maskW;
             const boxH = h * cfg.maskH;
             const boxX = (w - boxW) / 2;
@@ -333,7 +360,6 @@
             ctx.fillRect(boxX, boxY, boxW, boxH);
             ctx.restore();
 
-            // Draw Synced Subtitle Text
             if (subtitleText) {
                 const scaleRatio = w / 720;
                 const fontSize = Math.round(cfg.subSize * scaleRatio);
@@ -410,7 +436,7 @@
             document.getElementById('verifyBox').classList.add('hidden');
 
             try {
-                // --- STEP 1: STRICT SCRIPT VERIFICATION ---
+                // STEP 1: STRICT SCRIPT VERIFICATION
                 setStepBadge(1, 'running', '1. Script: Writing...');
                 setBar(15, 'Step 1/3: Generating Script...');
 
@@ -443,7 +469,7 @@
                     .map(s => s.trim())
                     .filter(s => s.length > 2);
 
-                // --- STEP 2: STRICT AUDIO VERIFICATION ---
+                // STEP 2: STRICT AUDIO VERIFICATION
                 setStepBadge(2, 'running', '2. Audio: Generating...');
                 setBar(40, 'Step 2/3: Generating Burmese Audio...');
 
@@ -467,13 +493,11 @@
                     throw new Error('Audio အချိန်တိုလွန်းနေပါသည်');
                 }
 
-                // Show playable audio immediately for user verification
                 const verifyAudioBlob = new Blob([audioArrayBuf], { type: ttsRes.headers.get('Content-Type') || 'audio/wav' });
                 document.getElementById('audioVerifyPlayer').src = URL.createObjectURL(verifyAudioBlob);
                 document.getElementById('engineBadge').innerText = ttsRes.headers.get('X-TTS-Engine') || 'Synced';
                 setStepBadge(2, 'ok', `2. Audio: OK (${Math.round(masterBuffer.duration)}s)`);
 
-                // Build exact timeline
                 const totalDur = masterBuffer.duration;
                 const totalChars = lines.reduce((a, b) => a + b.length, 0);
                 const timeline = [];
@@ -489,7 +513,7 @@
                     cursor += dur;
                 });
 
-                // --- STEP 3: FAST VIDEO MERGE WITH COUNTDOWN ---
+                // STEP 3: FAST VIDEO MERGE
                 setStepBadge(3, 'running', '3. Render: Merging...');
                 finalBlob = await renderVideoFast(fileInput, masterBuffer, audioCtx, timeline, platform, totalDur);
 
@@ -511,7 +535,6 @@
         function renderVideoFast(videoFile, audioBuffer, audioCtx, timeline, platform, totalDur) {
             return new Promise(async (resolve) => {
                 const canvas = document.createElement('canvas');
-                // Balanced HD resolution for fast mobile rendering
                 if (platform === 'tiktok') {
                     canvas.width = 540;
                     canvas.height = 960;
@@ -539,7 +562,6 @@
                     if (hasVid) await srcVid.play();
                 }
 
-                // 24fps cinematic frame rate speeds up encoding significantly
                 const stream = canvas.captureStream(24);
                 const dest = audioCtx.createMediaStreamDestination();
                 const srcNode = audioCtx.createBufferSource();
@@ -597,7 +619,7 @@
                     const prog = Math.min(1, (elapsed - seg.start) / Math.max(0.1, seg.end - seg.start));
                     const zoom = 1.05 + (prog * 0.06);
                     drawCompositeFrame(ctx, canvas, srcVid, platform, seg.text, zoom);
-                }, 41); // ~24 FPS exact timer
+                }, 41);
             });
         }
 
@@ -612,7 +634,6 @@
             setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 400);
         }
 
-        // Initial preview render
         window.onload = () => updateLivePreview();
     </script>
 </body>
