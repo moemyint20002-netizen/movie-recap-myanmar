@@ -5,7 +5,7 @@ export default async function handler(req, res) {
         pitch = '0'
     } = req.query;
 
-    // 1. Genuine Burmese Neural Voices (Microsoft Edge TTS: Thiha & Nilar)
+    // 1. Try Microsoft Edge Neural TTS First for Thiha & Nilar
     if (voice === 'Thiha' || voice === 'Nilar') {
         try {
             const voiceId = voice === 'Thiha' ? 'my-MM-ThihaNeural' : 'my-MM-NilarNeural';
@@ -15,19 +15,19 @@ export default async function handler(req, res) {
                 res.setHeader('X-TTS-Engine', `${voice}-Neural`);
                 return res.status(200).send(audioBuffer);
             }
-        } catch (err) {
-            // Fall through to Gemini Native Audio if Edge TTS is blocked
+        } catch (e) {
+            // Fall through to Gemini Native Audio
         }
     }
 
-    // 2. Genuine Gemini Native Voices (Puck, Charon, Fenrir, Aoede, Kore, Leda)
+    // 2. Try Gemini Native Voices with multiple model fallbacks (Bypasses High Demand limits)
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
         return res.status(400).json({ error: 'GEMINI_API_KEY မရှိပါ' });
     }
 
     const geminiVoice = (voice === 'Thiha') ? 'Charon' : (voice === 'Nilar') ? 'Aoede' : voice;
-    const models = ['gemini-2.5-flash-preview-tts', 'gemini-3.8-flash'];
+    const models = ['gemini-2.5-flash', 'gemini-3.8-flash', 'gemini-2.5-flash-preview-tts'];
     let lastError = 'Audio generation failed';
 
     for (const model of models) {
@@ -38,7 +38,7 @@ export default async function handler(req, res) {
                 body: JSON.stringify({
                     contents: [{
                         parts: [{
-                            text: `Speak naturally like a Burmese movie recap narrator. Read aloud clearly without adding commentary: "${text}"`
+                            text: `Read aloud clearly and naturally without extra commentary: "${text}"`
                         }]
                     }],
                     generationConfig: {
@@ -64,15 +64,26 @@ export default async function handler(req, res) {
                 return res.status(200).send(wavBuffer);
             }
             lastError = data?.error?.message || lastError;
-        } catch (e) {
-            lastError = e.message;
+        } catch (err) {
+            lastError = err.message;
         }
     }
+
+    // 3. Ultimate Fallback to Google Translate TTS if Gemini is busy
+    try {
+        const url = `https://translate.googleapis.com/translate_tts?ie=UTF-8&client=gtx&tl=my&q=${encodeURIComponent(text.slice(0, 200))}`;
+        const ttsRes = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+        if (ttsRes.ok) {
+            const buf = Buffer.from(await ttsRes.arrayBuffer());
+            res.setHeader('Content-Type', 'audio/mpeg');
+            res.setHeader('X-TTS-Engine', 'Fallback-GTX');
+            return res.status(200).send(buf);
+        }
+    } catch (err) {}
 
     return res.status(500).json({ error: lastError });
 }
 
-// Genuine Microsoft Edge Neural TTS (my-MM-ThihaNeural & my-MM-NilarNeural)
 async function synthesizeEdgeNeural(text, voiceName, pitch) {
     const pitchHz = `${parseInt(pitch) || 0}Hz`;
     const ssml = `<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='my-MM'>
@@ -91,9 +102,7 @@ async function synthesizeEdgeNeural(text, voiceName, pitch) {
         body: ssml
     });
 
-    if (!response.ok) {
-        throw new Error(`Edge TTS HTTP ${response.status}`);
-    }
+    if (!response.ok) throw new Error(`Edge TTS HTTP ${response.status}`);
     return Buffer.from(await response.arrayBuffer());
 }
 
