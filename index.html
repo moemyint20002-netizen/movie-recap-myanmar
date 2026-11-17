@@ -23,9 +23,7 @@
             border-color: #60a5fa !important;
             color: #ffffff !important;
         }
-        input[type=range] {
-            accent-color: #38bdf8;
-        }
+        input[type=range] { accent-color: #38bdf8; }
         button { cursor: pointer; touch-action: manipulation; }
     </style>
 </head>
@@ -40,7 +38,7 @@
                 </div>
                 <span class="font-extrabold text-sm tracking-wide">RECAP STUDIO</span>
             </div>
-            <span id="headerStatus" class="text-[11px] font-bold px-2.5 py-1 rounded-full bg-slate-800 text-slate-300">READY</span>
+            <span id="videoDurationBadge" class="text-[11px] font-bold px-2.5 py-1 rounded-full bg-slate-800 text-sky-400">00:00</span>
         </div>
     </header>
 
@@ -49,7 +47,7 @@
         <!-- 1. Source -->
         <section class="panel rounded-2xl p-4 space-y-3">
             <div class="flex items-center justify-between gap-2">
-                <span class="text-xs font-extrabold uppercase tracking-wider text-slate-400">1. Source</span>
+                <span class="text-xs font-extrabold uppercase tracking-wider text-slate-400">1. Source Video</span>
                 <label class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-3.5 py-2 rounded-xl flex items-center gap-2 cursor-pointer">
                     <i class="fa-solid fa-upload"></i>
                     <span id="fileLabel">Upload MP4</span>
@@ -57,7 +55,7 @@
                 </label>
             </div>
             <div class="flex flex-col sm:flex-row gap-2">
-                <input type="text" id="videoTitle" placeholder="Movie Title / Story Prompt..." class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-blue-500">
+                <input type="text" id="videoTitle" placeholder="Movie Title / Context (Optional)..." class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-blue-500">
                 <select id="platformPreset" onchange="updateLivePreview()" class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs">
                     <option value="tiktok">9:16 TikTok</option>
                     <option value="youtube">16:9 YouTube</option>
@@ -65,10 +63,10 @@
             </div>
         </section>
 
-        <!-- 2. Voice -->
+        <!-- 2. Voice (Locked to Final Render) -->
         <section class="panel rounded-2xl p-4 space-y-3">
             <div class="flex items-center justify-between">
-                <span class="text-xs font-extrabold uppercase tracking-wider text-slate-400">2. Voice (Tap to Preview)</span>
+                <span class="text-xs font-extrabold uppercase tracking-wider text-slate-400">2. Voice (Locked to Output)</span>
                 <span id="selectedVoiceBadge" class="text-xs font-bold text-sky-400">Puck</span>
             </div>
             <div class="grid grid-cols-3 sm:grid-cols-6 gap-2">
@@ -93,7 +91,7 @@
             </div>
         </section>
 
-        <!-- 3. Subtitle & Blur Studio -->
+        <!-- 3. Subtitle & Blur Studio (1:1 Matched to Final Render) -->
         <section class="panel rounded-2xl p-4 space-y-4">
             <div class="flex items-center justify-between">
                 <span class="text-xs font-extrabold uppercase tracking-wider text-slate-400">3. Subtitle & Blur Mask</span>
@@ -103,12 +101,10 @@
                 </div>
             </div>
 
-            <!-- Live Canvas Preview -->
             <div class="bg-black rounded-xl border border-slate-800 p-2 flex justify-center">
                 <canvas id="previewCanvas" class="max-h-[300px] w-auto rounded-lg"></canvas>
             </div>
 
-            <!-- Controls Grid -->
             <div class="grid grid-cols-2 gap-3 text-xs">
                 <div class="bg-slate-950 p-3 rounded-xl border border-slate-800/80 space-y-1.5">
                     <div class="flex justify-between text-[11px] text-slate-400">
@@ -121,17 +117,17 @@
                 <div class="bg-slate-950 p-3 rounded-xl border border-slate-800/80 space-y-1.5">
                     <div class="flex justify-between text-[11px] text-slate-400">
                         <span>Text Size</span>
-                        <span id="valSubSize" class="text-white font-bold">30px</span>
+                        <span id="valSubSize" class="text-white font-bold">28px</span>
                     </div>
-                    <input type="range" id="subSize" min="18" max="48" value="30" oninput="syncControls()" class="w-full">
+                    <input type="range" id="subSize" min="18" max="46" value="28" oninput="syncControls()" class="w-full">
                 </div>
 
                 <div class="bg-slate-950 p-3 rounded-xl border border-slate-800/80 space-y-1.5">
                     <div class="flex justify-between text-[11px] text-slate-400">
                         <span>Blur Strength</span>
-                        <span id="valBlur" class="text-white font-bold">18px</span>
+                        <span id="valBlur" class="text-white font-bold">20px</span>
                     </div>
-                    <input type="range" id="blurStrength" min="0" max="40" value="18" oninput="syncControls()" class="w-full">
+                    <input type="range" id="blurStrength" min="0" max="40" value="20" oninput="syncControls()" class="w-full">
                 </div>
 
                 <div class="bg-slate-950 p-3 rounded-xl border border-slate-800/80 space-y-1.5">
@@ -143,7 +139,6 @@
                 </div>
             </div>
 
-            <!-- Custom Mask Extra Sliders -->
             <div id="customMaskPanel" class="hidden grid grid-cols-2 gap-3 text-xs pt-1 border-t border-slate-800/80">
                 <div class="bg-slate-950 p-3 rounded-xl border border-slate-800/80 space-y-1.5">
                     <div class="flex justify-between text-[11px] text-slate-400">
@@ -165,8 +160,8 @@
         <!-- Pipeline Verification -->
         <section class="panel rounded-2xl p-4 space-y-3">
             <div class="grid grid-cols-3 gap-2 text-center text-[11px] font-bold">
-                <div id="st1" class="bg-slate-950 border border-slate-800 p-2.5 rounded-xl text-slate-400">1. Script: Idle</div>
-                <div id="st2" class="bg-slate-950 border border-slate-800 p-2.5 rounded-xl text-slate-400">2. Audio: Idle</div>
+                <div id="st1" class="bg-slate-950 border border-slate-800 p-2.5 rounded-xl text-slate-400">1. Analysis: Idle</div>
+                <div id="st2" class="bg-slate-950 border border-slate-800 p-2.5 rounded-xl text-slate-400">2. Voice: Idle</div>
                 <div id="st3" class="bg-slate-950 border border-slate-800 p-2.5 rounded-xl text-slate-400">3. Render: Idle</div>
             </div>
 
@@ -180,19 +175,16 @@
                 </div>
             </div>
 
-            <!-- Live Verification Box -->
             <div id="verifyBox" class="hidden space-y-2 pt-2 border-t border-slate-800">
                 <textarea id="scriptOutput" rows="3" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 focus:outline-none"></textarea>
                 <audio id="audioVerifyPlayer" controls class="w-full h-8"></audio>
             </div>
         </section>
 
-        <!-- Action Button -->
         <button type="button" id="runBtn" onclick="startPipeline()" class="w-full bg-blue-600 hover:bg-blue-500 active:scale-[0.99] text-white py-3.5 rounded-2xl font-extrabold text-sm shadow-lg transition">
-            Generate Video
+            Generate Synced Video
         </button>
 
-        <!-- Output Section -->
         <section id="outputSection" class="hidden panel border-emerald-500/60 rounded-2xl p-4 space-y-3">
             <div class="flex justify-between items-center">
                 <span class="text-xs font-extrabold text-emerald-400 uppercase">Final Output</span>
@@ -216,18 +208,19 @@
         let finalBlob = null;
         let finalExt = 'mp4';
         let previewAudio = new Audio();
+        let loadedVideoDuration = 0;
 
         async function pickVoice(el, name) {
             selectedVoice = name;
             const badge = document.getElementById('selectedVoiceBadge');
-            badge.innerText = `${name} (Loading...)`;
+            badge.innerText = `${name} (Preview...)`;
             document.querySelectorAll('.voice-btn').forEach(b => b.classList.remove('voice-active'));
             el.classList.add('voice-active');
 
             try {
                 previewAudio.pause();
                 previewAudio.currentTime = 0;
-                const sampleText = 'မင်္ဂလာပါ၊ ဒီဇာတ်ကားရဲ့ လျှို့ဝှက်ချက်တွေကို အခုပဲ အတူတူ ကြည့်လိုက်ကြရအောင်။';
+                const sampleText = 'မင်္ဂလာပါ၊ ဒီဇာတ်ကားရဲ့ ဇာတ်လမ်းအကျဉ်းကို အခုပဲ အတူတူ ကြည့်လိုက်ကြရအောင်။';
                 const res = await fetch(`/api/tts?voice=${encodeURIComponent(name)}&text=${encodeURIComponent(sampleText)}`);
                 if (!res.ok) {
                     const err = await res.json().catch(() => ({}));
@@ -236,9 +229,8 @@
                     return;
                 }
                 const blob = await res.blob();
-                const url = URL.createObjectURL(blob);
-                previewAudio.src = url;
-                badge.innerText = `${name} (Playing...)`;
+                previewAudio.src = URL.createObjectURL(blob);
+                badge.innerText = `${name} (Playing)`;
                 previewAudio.onended = () => { badge.innerText = name; };
                 await previewAudio.play();
             } catch (e) {
@@ -279,8 +271,12 @@
                 document.getElementById('fileLabel').innerText = input.files[0].name;
                 const srcVid = document.getElementById('srcVideo');
                 srcVid.src = URL.createObjectURL(input.files[0]);
-                srcVid.onloadeddata = () => {
-                    srcVid.currentTime = Math.min(2, srcVid.duration / 3);
+                srcVid.onloadedmetadata = () => {
+                    loadedVideoDuration = srcVid.duration || 0;
+                    const mins = Math.floor(loadedVideoDuration / 60);
+                    const secs = Math.floor(loadedVideoDuration % 60);
+                    document.getElementById('videoDurationBadge').innerText = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+                    srcVid.currentTime = Math.min(2, loadedVideoDuration / 3);
                 };
                 srcVid.onseeked = () => updateLivePreview();
             }
@@ -298,6 +294,7 @@
             return { subY, subSize, blurStrength, maskH, maskY, maskW };
         }
 
+        // Shared 1:1 renderer used by BOTH Live Preview and Final Video Render
         function drawCompositeFrame(ctx, canvas, srcVid, platform, subtitleText, zoomFactor) {
             const cfg = getLayoutConfig();
             const w = canvas.width;
@@ -332,6 +329,7 @@
                 ctx.fillRect(0, 0, w, h);
             }
 
+            // Exact Mask Coordinates
             const boxW = w * cfg.maskW;
             const boxH = h * cfg.maskH;
             const boxX = (w - boxW) / 2;
@@ -339,11 +337,12 @@
 
             ctx.save();
             ctx.beginPath();
-            ctx.roundRect(boxX, boxY, boxW, boxH, 14);
+            ctx.roundRect(boxX, boxY, boxW, boxH, Math.round(w * 0.02));
             ctx.clip();
 
             if (hasVid && cfg.blurStrength > 0) {
-                ctx.filter = `blur(${cfg.blurStrength}px) brightness(0.65)`;
+                const scaledBlur = Math.max(1, Math.round(cfg.blurStrength * (w / 360)));
+                ctx.filter = `blur(${scaledBlur}px) brightness(0.65)`;
                 const vw = srcVid.videoWidth;
                 const vh = srcVid.videoHeight;
                 if (platform === 'tiktok') {
@@ -360,13 +359,14 @@
             ctx.fillRect(boxX, boxY, boxW, boxH);
             ctx.restore();
 
+            // Exact Proportional Subtitle Font & Position
             if (subtitleText) {
-                const scaleRatio = w / 720;
-                const fontSize = Math.round(cfg.subSize * scaleRatio);
+                const scaleRatio = w / 360;
+                const fontSize = Math.round(cfg.subSize * 0.52 * scaleRatio);
                 ctx.font = `bold ${fontSize}px Padauk, sans-serif`;
                 ctx.textAlign = 'center';
 
-                const maxTextW = boxW - 32;
+                const maxTextW = boxW - (24 * scaleRatio);
                 const words = subtitleText.split(' ');
                 const lines = [];
                 let line = '';
@@ -402,7 +402,30 @@
             }
             const ctx = canvas.getContext('2d');
             const srcVid = document.getElementById('srcVideo');
-            drawCompositeFrame(ctx, canvas, srcVid, platform, 'နမူနာ မြန်မာစာတန်းထိုး နေရာနှင့် Blur အနေအထား', 1.06);
+            drawCompositeFrame(ctx, canvas, srcVid, platform, 'နမူနာ မြန်မာစာတန်းထိုး နေရာနှင့် Blur အနေအထား', 1.05);
+        }
+
+        // Capture 6 evenly spaced keyframes from uploaded video so AI sees the whole plot
+        async function extractVideoFrames(srcVid) {
+            if (!srcVid || !srcVid.src || !loadedVideoDuration || loadedVideoDuration < 1) return [];
+            const frames = [];
+            const tmpCanvas = document.createElement('canvas');
+            tmpCanvas.width = 320;
+            tmpCanvas.height = 180;
+            const tmpCtx = tmpCanvas.getContext('2d');
+
+            const samplePoints = [0.08, 0.25, 0.42, 0.60, 0.78, 0.92];
+            for (const ratio of samplePoints) {
+                await new Promise(resolve => {
+                    srcVid.currentTime = ratio * loadedVideoDuration;
+                    srcVid.onseeked = () => {
+                        tmpCtx.drawImage(srcVid, 0, 0, tmpCanvas.width, tmpCanvas.height);
+                        frames.push(tmpCanvas.toDataURL('image/jpeg', 0.6));
+                        resolve();
+                    };
+                });
+            }
+            return frames;
         }
 
         function setStepBadge(num, state, label) {
@@ -423,6 +446,7 @@
             const fileInput = document.getElementById('movieFile').files[0];
             const titleInput = document.getElementById('videoTitle').value.trim();
             const platform = document.getElementById('platformPreset').value;
+            const srcVid = document.getElementById('srcVideo');
 
             if (!fileInput && !titleInput) {
                 alert('MP4 ဖိုင် သို့မဟုတ် ဇာတ်ကားနာမည် ထည့်ပါ။');
@@ -436,86 +460,78 @@
             document.getElementById('verifyBox').classList.add('hidden');
 
             try {
-                // STEP 1: STRICT SCRIPT VERIFICATION
-                setStepBadge(1, 'running', '1. Script: Writing...');
-                setBar(15, 'Step 1/3: Generating Script...');
+                // STEP 1: Visual Video Analysis + Exact Duration Script
+                setStepBadge(1, 'running', '1. Analysis: Scanning...');
+                setBar(15, 'Analyzing video frames & duration...');
+
+                const targetDuration = loadedVideoDuration > 2 ? loadedVideoDuration : 45;
+                const frames = await extractVideoFrames(srcVid);
 
                 const scriptRes = await fetch('/api/script', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        sourceInfo: titleInput || fileInput.name,
-                        platform,
+                        sourceInfo: titleInput || (fileInput ? fileInput.name : ''),
+                        durationSec: targetDuration,
+                        frames,
                         lang: 'Myanmar'
                     })
                 });
                 const scriptData = await scriptRes.json();
 
                 if (!scriptRes.ok || !scriptData.script || scriptData.script.trim().length < 15) {
-                    setStepBadge(1, 'err', '1. Script: Failed');
-                    throw new Error(scriptData.error || 'Script မထွက်ပါ (API Key စစ်ဆေးပါ)');
+                    setStepBadge(1, 'err', '1. Analysis: Failed');
+                    throw new Error(scriptData.error || 'Script မထွက်ပါ');
                 }
 
-                const cleanText = scriptData.script
-                    .replace(/\[HOOK\]|\[STORY\]|\[CLIFFHANGER\]|[#*🔥🎬⚡\[\]]/gi, '')
-                    .trim();
-
+                const cleanText = scriptData.script.replace(/[#*🔥🎬⚡\[\]]/gi, '').trim();
                 document.getElementById('scriptOutput').value = cleanText;
                 document.getElementById('verifyBox').classList.remove('hidden');
-                setStepBadge(1, 'ok', '1. Script: OK');
+                setStepBadge(1, 'ok', '1. Analysis: OK');
 
                 const lines = cleanText
                     .split(/[\n။\.!?]+/)
                     .map(s => s.trim())
                     .filter(s => s.length > 2);
 
-                // STEP 2: STRICT AUDIO VERIFICATION
-                setStepBadge(2, 'running', '2. Audio: Generating...');
-                setBar(40, 'Step 2/3: Generating Burmese Audio...');
+                // STEP 2: Generate Voiceover using LOCKED selectedVoice
+                setStepBadge(2, 'running', `2. Voice (${selectedVoice})...`);
+                setBar(40, `Generating ${selectedVoice} voiceover...`);
 
                 const ttsRes = await fetch(`/api/tts?voice=${encodeURIComponent(selectedVoice)}&text=${encodeURIComponent(lines.join('။ '))}`);
                 if (!ttsRes.ok) {
                     const errJson = await ttsRes.json().catch(() => ({}));
-                    setStepBadge(2, 'err', '2. Audio: Failed');
+                    setStepBadge(2, 'err', '2. Voice: Failed');
                     throw new Error(errJson.error || 'Audio မထွက်ပါ');
                 }
 
                 const audioArrayBuf = await ttsRes.arrayBuffer();
-                if (!audioArrayBuf || audioArrayBuf.byteLength < 1000) {
-                    setStepBadge(2, 'err', '2. Audio: Empty');
-                    throw new Error('Audio ဖိုင် အလွတ်ဖြစ်နေပါသည်');
-                }
-
                 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 const masterBuffer = await audioCtx.decodeAudioData(audioArrayBuf.slice(0));
-                if (!masterBuffer || masterBuffer.duration < 1) {
-                    setStepBadge(2, 'err', '2. Audio: Invalid');
-                    throw new Error('Audio အချိန်တိုလွန်းနေပါသည်');
-                }
 
                 const verifyAudioBlob = new Blob([audioArrayBuf], { type: ttsRes.headers.get('Content-Type') || 'audio/wav' });
                 document.getElementById('audioVerifyPlayer').src = URL.createObjectURL(verifyAudioBlob);
-                document.getElementById('engineBadge').innerText = ttsRes.headers.get('X-TTS-Engine') || 'Synced';
-                setStepBadge(2, 'ok', `2. Audio: OK (${Math.round(masterBuffer.duration)}s)`);
+                document.getElementById('engineBadge').innerText = `${selectedVoice} • ${ttsRes.headers.get('X-TTS-Engine') || 'Synced'}`;
+                setStepBadge(2, 'ok', `2. Voice: OK (${Math.round(masterBuffer.duration)}s)`);
 
-                const totalDur = masterBuffer.duration;
+                // Match final video timeline to full video/audio length so narration never ends early
+                const finalTotalDur = loadedVideoDuration > 2 ? Math.max(loadedVideoDuration, masterBuffer.duration) : masterBuffer.duration;
                 const totalChars = lines.reduce((a, b) => a + b.length, 0);
                 const timeline = [];
                 let cursor = 0;
-                lines.forEach((line, i) => {
-                    const dur = (line.length / Math.max(1, totalChars)) * totalDur;
+                lines.forEach((line) => {
+                    const segDur = (line.length / Math.max(1, totalChars)) * finalTotalDur;
                     timeline.push({
                         text: line,
                         start: cursor,
-                        end: cursor + dur,
-                        ratio: i / Math.max(1, lines.length)
+                        end: cursor + segDur
                     });
-                    cursor += dur;
+                    cursor += segDur;
                 });
 
-                // STEP 3: FAST VIDEO MERGE
-                setStepBadge(3, 'running', '3. Render: Merging...');
-                finalBlob = await renderVideoFast(fileInput, masterBuffer, audioCtx, timeline, platform, totalDur);
+                // STEP 3: Fast Render with Exact Locked Settings
+                setStepBadge(3, 'running', '3. Render: Fast Merge...');
+                finalBlob = await renderVideoAccelerated(srcVid, masterBuffer, audioCtx, timeline, platform, finalTotalDur);
 
                 setStepBadge(3, 'ok', '3. Render: Done');
                 setBar(100, 'Completed');
@@ -532,7 +548,7 @@
             }
         }
 
-        function renderVideoFast(videoFile, audioBuffer, audioCtx, timeline, platform, totalDur) {
+        function renderVideoAccelerated(srcVid, audioBuffer, audioCtx, timeline, platform, totalDur) {
             return new Promise(async (resolve) => {
                 const canvas = document.createElement('canvas');
                 if (platform === 'tiktok') {
@@ -543,29 +559,24 @@
                     canvas.height = 540;
                 }
                 const ctx = canvas.getContext('2d');
-                const srcVid = document.getElementById('srcVideo');
 
-                let hasVid = false;
-                let vidDur = 0;
-                if (videoFile) {
-                    if (!srcVid.src) srcVid.src = URL.createObjectURL(videoFile);
+                const hasVid = srcVid && srcVid.src && loadedVideoDuration > 0;
+                if (hasVid) {
+                    srcVid.currentTime = 0;
                     srcVid.loop = true;
-                    if (srcVid.readyState >= 2) {
-                        hasVid = true;
-                        vidDur = srcVid.duration || 10;
-                    } else {
-                        await new Promise(r => {
-                            srcVid.onloadedmetadata = () => { hasVid = true; vidDur = srcVid.duration || 10; r(); };
-                            srcVid.onerror = () => r();
-                        });
-                    }
-                    if (hasVid) await srcVid.play();
+                    // Adjust video playback rate so original video plays smoothly from start to finish in sync with narration
+                    srcVid.playbackRate = Math.max(0.5, Math.min(2.0, loadedVideoDuration / totalDur));
+                    await srcVid.play();
                 }
 
                 const stream = canvas.captureStream(24);
                 const dest = audioCtx.createMediaStreamDestination();
                 const srcNode = audioCtx.createBufferSource();
                 srcNode.buffer = audioBuffer;
+                // Slightly pace audio if needed so it never finishes noticeably earlier than video
+                if (audioBuffer.duration < totalDur && (totalDur / audioBuffer.duration) <= 1.15) {
+                    srcNode.playbackRate.value = audioBuffer.duration / totalDur;
+                }
                 srcNode.connect(dest);
 
                 const mixed = new MediaStream([...stream.getVideoTracks(), ...dest.stream.getAudioTracks()]);
@@ -576,11 +587,14 @@
                     finalExt = 'webm';
                 }
 
-                const recorder = new MediaRecorder(mixed, { mimeType: mime, videoBitsPerSecond: 2500000 });
+                const recorder = new MediaRecorder(mixed, { mimeType: mime, videoBitsPerSecond: 2400000 });
                 const chunks = [];
                 recorder.ondataavailable = e => { if (e.data && e.data.size > 0) chunks.push(e.data); };
                 recorder.onstop = () => {
-                    if (hasVid) srcVid.pause();
+                    if (hasVid) {
+                        srcVid.pause();
+                        srcVid.playbackRate = 1.0;
+                    }
                     resolve(new Blob(chunks, { type: mime }));
                 };
 
@@ -588,13 +602,12 @@
                 srcNode.start();
 
                 const t0 = performance.now();
-                let lastIdx = -1;
 
                 const timer = setInterval(() => {
                     const elapsed = (performance.now() - t0) / 1000;
                     const remain = Math.max(0, Math.ceil(totalDur - elapsed));
-                    const pct = Math.min(99, 65 + Math.round((elapsed / totalDur) * 34));
-                    setBar(pct, `Step 3/3: Rendering Video (${remain}s left)...`);
+                    const pct = Math.min(99, 60 + Math.round((elapsed / totalDur) * 39));
+                    setBar(pct, `Step 3/3: Merging (${remain}s left)...`);
 
                     if (elapsed >= totalDur) {
                         clearInterval(timer);
@@ -606,18 +619,8 @@
                     if (idx === -1) idx = timeline.length - 1;
                     const seg = timeline[idx];
 
-                    if (idx !== lastIdx) {
-                        lastIdx = idx;
-                        if (hasVid && vidDur > 1) {
-                            const target = Math.min(vidDur - 0.5, seg.ratio * vidDur);
-                            if (Math.abs(srcVid.currentTime - target) > 1.2) {
-                                srcVid.currentTime = target;
-                            }
-                        }
-                    }
-
                     const prog = Math.min(1, (elapsed - seg.start) / Math.max(0.1, seg.end - seg.start));
-                    const zoom = 1.05 + (prog * 0.06);
+                    const zoom = 1.05 + (prog * 0.05);
                     drawCompositeFrame(ctx, canvas, srcVid, platform, seg.text, zoom);
                 }, 41);
             });
