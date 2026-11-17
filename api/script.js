@@ -8,29 +8,47 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Vercel တွင် GEMINI_API_KEY မထည့်ရသေးပါ။' });
     }
 
-    const { sourceInfo = '', platform = 'tiktok', lang = 'Myanmar' } = req.body;
+    const {
+        sourceInfo = '',
+        durationSec = 60,
+        frames = [],
+        lang = 'Myanmar'
+    } = req.body;
 
-    const lengthGuide = platform === 'tiktok'
-        ? 'Keep it concise (around 120-160 words) for a 1-minute viral TikTok/Shorts recap.'
-        : 'Keep it well-paced (around 250-350 words) for a YouTube movie recap.';
+    // Calculate exact Burmese word/character target so narration matches video length without ending early or repeating
+    const targetWords = Math.max(40, Math.round(durationSec * 2.4));
+    const sceneCount = Math.max(4, Math.min(24, Math.round(durationSec / 7)));
 
-    const prompt = `Write an engaging, natural storytelling movie recap script in ${lang} for: "${sourceInfo}".
-${lengthGuide}
-Format strictly as:
-🔥 [HOOK]: (1-2 punchy sentences)
-🎬 [STORY]: (Natural storytelling narration ready for voiceover)
-⚡ [CLIFFHANGER]: (1 exciting closing line)`;
+    const prompt = `You are an expert Burmese Movie Recap narrator and video analyst.
+Analyze the attached chronological video frames (taken evenly from start to end of the ${Math.round(durationSec)}-second video) and the title/context: "${sourceInfo}".
+
+STRICT RULES:
+1. Write a cohesive, natural, engaging ${lang} narration script that matches the visual progression of the scenes from start to finish.
+2. Total script length MUST be approximately ${targetWords} words (around ${sceneCount} concise sentences) so the voiceover naturally fills the ${Math.round(durationSec)}-second video without ending too early or dragging/repeating.
+3. DO NOT repeat phrases, DO NOT pad with filler words, and DO NOT add headers like [HOOK] or [STORY].
+4. Output ONLY the clean spoken sentences, one sentence per line, ready for direct voiceover and subtitle burning.`;
+
+    const parts = [{ text: prompt }];
+    if (Array.isArray(frames)) {
+        for (const base64Img of frames.slice(0, 6)) {
+            if (base64Img && base64Img.includes(',')) {
+                const [meta, data] = base64Img.split(',');
+                const mimeType = meta.match(/:(.*?);/)?.[1] || 'image/jpeg';
+                parts.push({ inlineData: { mimeType, data } });
+            }
+        }
+    }
 
     try {
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${apiKey}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                contents: [{ parts: [{ text: prompt }] }],
+                contents: [{ parts }],
                 generationConfig: {
                     thinkingConfig: { thinkingBudget: 0 },
-                    maxOutputTokens: 800,
-                    temperature: 0.7
+                    maxOutputTokens: 1500,
+                    temperature: 0.65
                 }
             })
         });
@@ -42,7 +60,7 @@ Format strictly as:
             return res.status(500).json({ error: data?.error?.message || 'Script generation failed' });
         }
 
-        return res.status(200).json({ script });
+        return res.status(200).json({ script: script.trim() });
     } catch (error) {
         return res.status(500).json({ error: error.message });
     }
