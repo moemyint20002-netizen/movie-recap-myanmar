@@ -15,18 +15,18 @@ export default async function handler(req, res) {
         lang = 'Myanmar'
     } = req.body;
 
-    // Calculate exact Burmese word/character target so narration matches video length without ending early or repeating
+    // Exact Burmese word target matched to video duration (avoids early cutoff or repetition)
     const targetWords = Math.max(40, Math.round(durationSec * 2.4));
     const sceneCount = Math.max(4, Math.min(24, Math.round(durationSec / 7)));
 
     const prompt = `You are an expert Burmese Movie Recap narrator and video analyst.
-Analyze the attached chronological video frames (taken evenly from start to end of the ${Math.round(durationSec)}-second video) and the title/context: "${sourceInfo}".
+Analyze the attached chronological video frames (captured evenly from start to end of the ${Math.round(durationSec)}-second video) and the title/context: "${sourceInfo}".
 
 STRICT RULES:
-1. Write a cohesive, natural, engaging ${lang} narration script that matches the visual progression of the scenes from start to finish.
-2. Total script length MUST be approximately ${targetWords} words (around ${sceneCount} concise sentences) so the voiceover naturally fills the ${Math.round(durationSec)}-second video without ending too early or dragging/repeating.
-3. DO NOT repeat phrases, DO NOT pad with filler words, and DO NOT add headers like [HOOK] or [STORY].
-4. Output ONLY the clean spoken sentences, one sentence per line, ready for direct voiceover and subtitle burning.`;
+1. Write a cohesive, natural, engaging ${lang} narration script that strictly matches the visual progression of the scenes from start to finish.
+2. Total script length MUST be approximately ${targetWords} words (around ${sceneCount} concise sentences) so the voiceover fills the ${Math.round(durationSec)}-second video smoothly without ending early or repeating/dragging.
+3. DO NOT repeat phrases, DO NOT pad with filler words, and DO NOT include labels like [HOOK], [STORY], or [CLIFFHANGER].
+4. Output ONLY the clean spoken Burmese sentences, one sentence per line, ready for voiceover and subtitle burning.`;
 
     const parts = [{ text: prompt }];
     if (Array.isArray(frames)) {
