@@ -410,4 +410,240 @@
                 canvas.height = 360;
             }
             const ctx = canvas.getContext('2d');
-            const srcVid = document
+            const srcVid = document.getElementById('srcVideo');
+            drawCompositeFrame(ctx, canvas, srcVid, platform, 'နမူနာ မြန်မာစာတန်းထိုး နေရာနှင့် Blur အနေအထား', 1.05);
+        }
+
+        async function extractVideoFrames(srcVid) {
+            if (!srcVid || !srcVid.src || !loadedVideoDuration || loadedVideoDuration < 1) return [];
+            const frames = [];
+            const tmpCanvas = document.createElement('canvas');
+            tmpCanvas.width = 320;
+            tmpCanvas.height = 180;
+            const tmpCtx = tmpCanvas.getContext('2d');
+
+            const samplePoints = [0.08, 0.25, 0.42, 0.60, 0.78, 0.92];
+            for (const ratio of samplePoints) {
+                await new Promise(resolve => {
+                    srcVid.currentTime = ratio * loadedVideoDuration;
+                    srcVid.onseeked = () => {
+                        tmpCtx.drawImage(srcVid, 0, 0, tmpCanvas.width, tmpCanvas.height);
+                        frames.push(tmpCanvas.toDataURL('image/jpeg', 0.6));
+                        resolve();
+                    };
+                });
+            }
+            return frames;
+        }
+
+        function setStepBadge(num, state, label) {
+            const el = document.getElementById('st' + num);
+            el.innerText = label;
+            if (state === 'running') el.className = "bg-amber-500/20 border border-amber-500/40 p-2.5 rounded-xl text-amber-300 animate-pulse";
+            else if (state === 'ok') el.className = "bg-emerald-500/20 border border-emerald-500/40 p-2.5 rounded-xl text-emerald-300";
+            else if (state === 'err') el.className = "bg-rose-500/20 border border-rose-500/40 p-2.5 rounded-xl text-rose-300";
+        }
+
+        function setBar(pct, msg) {
+            document.getElementById('progressFill').style.width = pct + '%';
+            document.getElementById('progressPct').innerText = pct + '%';
+            document.getElementById('progressMsg').innerText = msg;
+        }
+
+        async function startPipeline() {
+            const fileInput = document.getElementById('movieFile').files[0];
+            const titleInput = document.getElementById('videoTitle').value.trim();
+            const platform = document.getElementById('platformPreset').value;
+            const srcVid = document.getElementById('srcVideo');
+
+            if (!fileInput && !titleInput) {
+                alert('MP4 ဖိုင် သို့မဟုတ် ဇာတ်ကားနာမည် ထည့်ပါ။');
+                return;
+            }
+
+            const btn = document.getElementById('runBtn');
+            btn.disabled = true;
+            btn.classList.add('opacity-50');
+            document.getElementById('outputSection').classList.add('hidden');
+            document.getElementById('verifyBox').classList.add('hidden');
+
+            try {
+                // STEP 1: Visual Video Analysis + Exact Duration Script
+                setStepBadge(1, 'running', '1. Analysis: Scanning...');
+                setBar(15, 'Analyzing video frames & duration...');
+
+                const targetDuration = loadedVideoDuration > 2 ? loadedVideoDuration : 45;
+                const frames = await extractVideoFrames(srcVid);
+
+                const scriptRes = await fetch('/api/script', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        sourceInfo: titleInput || (fileInput ? fileInput.name : ''),
+                        durationSec: targetDuration,
+                        frames,
+                        lang: 'Myanmar'
+                    })
+                });
+                const scriptData = await scriptRes.json();
+
+                if (!scriptRes.ok || !scriptData.script || scriptData.script.trim().length < 15) {
+                    setStepBadge(1, 'err', '1. Analysis: Failed');
+                    throw new Error(scriptData.error || 'Script မထွက်ပါ');
+                }
+
+                const cleanText = scriptData.script.replace(/[#*🔥🎬⚡\[\]]/gi, '').trim();
+                document.getElementById('scriptOutput').value = cleanText;
+                document.getElementById('verifyBox').classList.remove('hidden');
+                setStepBadge(1, 'ok', '1. Analysis: OK');
+
+                const lines = cleanText
+                    .split(/[\n။\.!?]+/)
+                    .map(s => s.trim())
+                    .filter(s => s.length > 2);
+
+                // STEP 2: Generate Voiceover using LOCKED selectedVoice (Exact match with preview)
+                setStepBadge(2, 'running', `2. Voice (${selectedVoice})...`);
+                setBar(40, `Generating ${selectedVoice} voiceover...`);
+
+                const { apiVoice, pitch } = resolveTtsParams(selectedVoice);
+                const ttsRes = await fetch(`/api/tts?voice=${encodeURIComponent(apiVoice)}&pitch=${encodeURIComponent(pitch)}&text=${encodeURIComponent(lines.join('။ '))}`);
+                if (!ttsRes.ok) {
+                    const errJson = await ttsRes.json().catch(() => ({}));
+                    setStepBadge(2, 'err', '2. Voice: Failed');
+                    throw new Error(errJson.error || 'Audio မထွက်ပါ');
+                }
+
+                const audioArrayBuf = await ttsRes.arrayBuffer();
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const masterBuffer = await audioCtx.decodeAudioData(audioArrayBuf.slice(0));
+
+                const verifyAudioBlob = new Blob([audioArrayBuf], { type: ttsRes.headers.get('Content-Type') || 'audio/wav' });
+                document.getElementById('audioVerifyPlayer').src = URL.createObjectURL(verifyAudioBlob);
+                document.getElementById('engineBadge').innerText = `${selectedVoice} • ${ttsRes.headers.get('X-TTS-Engine') || 'Synced'}`;
+                setStepBadge(2, 'ok', `2. Voice: OK (${Math.round(masterBuffer.duration)}s)`);
+
+                const finalTotalDur = loadedVideoDuration > 2 ? Math.max(loadedVideoDuration, masterBuffer.duration) : masterBuffer.duration;
+                const totalChars = lines.reduce((a, b) => a + b.length, 0);
+                const timeline = [];
+                let cursor = 0;
+                lines.forEach((line) => {
+                    const segDur = (line.length / Math.max(1, totalChars)) * finalTotalDur;
+                    timeline.push({
+                        text: line,
+                        start: cursor,
+                        end: cursor + segDur
+                    });
+                    cursor += segDur;
+                });
+
+                // STEP 3: Fast Render with Locked Settings
+                setStepBadge(3, 'running', '3. Render: Fast Merge...');
+                finalBlob = await renderVideoAccelerated(srcVid, masterBuffer, audioCtx, timeline, platform, finalTotalDur);
+
+                setStepBadge(3, 'ok', '3. Render: Done');
+                setBar(100, 'Completed');
+                document.getElementById('finalPlayer').src = URL.createObjectURL(finalBlob);
+                document.getElementById('outputSection').classList.remove('hidden');
+                document.getElementById('outputSection').scrollIntoView({ behavior: 'smooth' });
+
+            } catch (e) {
+                setBar(0, 'Stopped: ' + e.message);
+                alert(e.message);
+            } finally {
+                btn.disabled = false;
+                btn.classList.remove('opacity-50');
+            }
+        }
+
+        function renderVideoAccelerated(srcVid, audioBuffer, audioCtx, timeline, platform, totalDur) {
+            return new Promise(async (resolve) => {
+                const canvas = document.createElement('canvas');
+                if (platform === 'tiktok') {
+                    canvas.width = 540;
+                    canvas.height = 960;
+                } else {
+                    canvas.width = 960;
+                    canvas.height = 540;
+                }
+                const ctx = canvas.getContext('2d');
+
+                const hasVid = srcVid && srcVid.src && loadedVideoDuration > 0;
+                if (hasVid) {
+                    srcVid.currentTime = 0;
+                    srcVid.loop = true;
+                    srcVid.playbackRate = Math.max(0.5, Math.min(2.0, loadedVideoDuration / totalDur));
+                    await srcVid.play();
+                }
+
+                const stream = canvas.captureStream(24);
+                const dest = audioCtx.createMediaStreamDestination();
+                const srcNode = audioCtx.createBufferSource();
+                srcNode.buffer = audioBuffer;
+                if (audioBuffer.duration < totalDur && (totalDur / audioBuffer.duration) <= 1.15) {
+                    srcNode.playbackRate.value = audioBuffer.duration / totalDur;
+                }
+                srcNode.connect(dest);
+
+                const mixed = new MediaStream([...stream.getVideoTracks(), ...dest.stream.getAudioTracks()]);
+                let mime = 'video/mp4';
+                finalExt = 'mp4';
+                if (!MediaRecorder.isTypeSupported('video/mp4')) {
+                    mime = 'video/webm';
+                    finalExt = 'webm';
+                }
+
+                const recorder = new MediaRecorder(mixed, { mimeType: mime, videoBitsPerSecond: 2400000 });
+                const chunks = [];
+                recorder.ondataavailable = e => { if (e.data && e.data.size > 0) chunks.push(e.data); };
+                recorder.onstop = () => {
+                    if (hasVid) {
+                        srcVid.pause();
+                        srcVid.playbackRate = 1.0;
+                    }
+                    resolve(new Blob(chunks, { type: mime }));
+                };
+
+                recorder.start();
+                srcNode.start();
+
+                const t0 = performance.now();
+
+                const timer = setInterval(() => {
+                    const elapsed = (performance.now() - t0) / 1000;
+                    const remain = Math.max(0, Math.ceil(totalDur - elapsed));
+                    const pct = Math.min(99, 60 + Math.round((elapsed / totalDur) * 39));
+                    setBar(pct, `Step 3/3: Merging (${remain}s left)...`);
+
+                    if (elapsed >= totalDur) {
+                        clearInterval(timer);
+                        recorder.stop();
+                        return;
+                    }
+
+                    let idx = timeline.findIndex(item => elapsed >= item.start && elapsed < item.end);
+                    if (idx === -1) idx = timeline.length - 1;
+                    const seg = timeline[idx];
+
+                    const prog = Math.min(1, (elapsed - seg.start) / Math.max(0.1, seg.end - seg.start));
+                    const zoom = 1.05 + (prog * 0.05);
+                    drawCompositeFrame(ctx, canvas, srcVid, platform, seg.text, zoom);
+                }, 41);
+            });
+        }
+
+        function downloadOutput() {
+            if (!finalBlob) return;
+            const url = URL.createObjectURL(finalBlob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Recap_${selectedVoice}.${finalExt}`;
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 400);
+        }
+
+        window.onload = () => updateLivePreview();
+    </script>
+</body>
+</html>
