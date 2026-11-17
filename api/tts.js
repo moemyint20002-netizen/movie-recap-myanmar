@@ -17,11 +17,10 @@ export default async function handler(req, res) {
         ? 'Speak in a bright, expressive, youthful tone.'
         : 'Speak naturally like a professional Burmese movie recap storyteller.';
 
-    // Try supported Gemini Native Audio models in order
     const models = [
-        'gemini-2.5-flash-preview-tts',
-        'gemini-2.5-flash',
-        'gemini-2.0-flash'
+        'gemini-3.8-flash',
+        'gemini-3.8-flash-preview-tts',
+        'gemini-2.5-flash-preview-tts'
     ];
 
     let lastError = null;
@@ -64,7 +63,6 @@ export default async function handler(req, res) {
                     return res.status(200).send(rawBuffer);
                 }
 
-                // Convert raw 24kHz 16-bit PCM to playable WAV
                 const wavBuffer = pcmToWav(rawBuffer, 24000, 1, 16);
                 res.setHeader('Content-Type', 'audio/wav');
                 res.setHeader('Cache-Control', 'public, max-age=86400');
