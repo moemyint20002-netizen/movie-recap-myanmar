@@ -6,10 +6,6 @@ export default async function handler(req, res) {
     } = req.query;
 
     const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-        return res.status(400).json({ error: 'Vercel တွင် GEMINI_API_KEY မထည့်ရသေးပါ။' });
-    }
-
     const pitchVal = parseInt(pitch) || 0;
     const toneInstruction = pitchVal < -15
         ? 'Speak in a deep, warm, cinematic male narrator tone.'
@@ -17,32 +13,23 @@ export default async function handler(req, res) {
         ? 'Speak in a bright, expressive, youthful tone.'
         : 'Speak naturally like a professional Burmese movie recap storyteller.';
 
-    const models = [
-        'gemini-3.8-flash',
-        'gemini-3.8-flash-preview-tts',
-        'gemini-2.5-flash-preview-tts'
-    ];
-
-    let lastError = null;
-
-    for (const model of models) {
+    // 1. Try Gemini Native TTS first (Single Request for full script)
+    if (apiKey) {
         try {
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     contents: [{
                         parts: [{
-                            text: `${toneInstruction} Read aloud the following text clearly and naturally without adding extra commentary: "${text}"`
+                            text: `${toneInstruction} Pause briefly at each sentence break. Read aloud clearly and naturally: "${text}"`
                         }]
                     }],
                     generationConfig: {
                         responseModalities: ['AUDIO'],
                         speechConfig: {
                             voiceConfig: {
-                                prebuiltVoiceConfig: {
-                                    voiceName: voice
-                                }
+                                prebuiltVoiceConfig: { voiceName: voice }
                             }
                         }
                     }
@@ -54,28 +41,59 @@ export default async function handler(req, res) {
             const audioPart = parts.find(p => p.inlineData && p.inlineData.data);
 
             if (audioPart && audioPart.inlineData.data) {
-                const mimeType = audioPart.inlineData.mimeType || 'audio/pcm';
                 const rawBuffer = Buffer.from(audioPart.inlineData.data, 'base64');
-
-                if (mimeType.includes('wav') || mimeType.includes('mp3') || mimeType.includes('mpeg')) {
-                    res.setHeader('Content-Type', mimeType);
-                    res.setHeader('Cache-Control', 'public, max-age=86400');
-                    return res.status(200).send(rawBuffer);
-                }
-
                 const wavBuffer = pcmToWav(rawBuffer, 24000, 1, 16);
                 res.setHeader('Content-Type', 'audio/wav');
-                res.setHeader('Cache-Control', 'public, max-age=86400');
+                res.setHeader('X-TTS-Engine', 'Gemini-Native');
                 return res.status(200).send(wavBuffer);
             }
-
-            lastError = data?.error?.message || JSON.stringify(data);
-        } catch (err) {
-            lastError = err.message;
+        } catch (e) {
+            // Fall through to backup engine if quota exceeded
         }
     }
 
-    return res.status(500).json({ error: `Gemini Audio Error: ${lastError}` });
+    // 2. Automatic Backup Burmese TTS when Gemini Free Tier 10/day quota is reached
+    try {
+        const chunks = splitTextChunks(text, 180);
+        const mp3Buffers = [];
+
+        for (const chunk of chunks) {
+            const url = `https://translate.googleapis.com/translate_tts?ie=UTF-8&client=gtx&tl=my&q=${encodeURIComponent(chunk)}`;
+            const ttsRes = await fetch(url, {
+                headers: { 'User-Agent': 'Mozilla/5.0' }
+            });
+            if (ttsRes.ok) {
+                mp3Buffers.push(Buffer.from(await ttsRes.arrayBuffer()));
+            }
+        }
+
+        if (mp3Buffers.length > 0) {
+            const combined = Buffer.concat(mp3Buffers);
+            res.setHeader('Content-Type', 'audio/mpeg');
+            res.setHeader('X-TTS-Engine', 'Backup-MM');
+            return res.status(200).send(combined);
+        }
+    } catch (err) {
+        return res.status(500).json({ error: err.message });
+    }
+
+    return res.status(500).json({ error: 'TTS generation failed' });
+}
+
+function splitTextChunks(str, maxLen) {
+    const parts = str.split(/(?<=[။\.!?])\s*/);
+    const chunks = [];
+    let current = '';
+    for (const p of parts) {
+        if ((current + ' ' + p).length > maxLen) {
+            if (current) chunks.push(current.trim());
+            current = p;
+        } else {
+            current = current ? (current + ' ' + p) : p;
+        }
+    }
+    if (current) chunks.push(current.trim());
+    return chunks.length ? chunks : [str.slice(0, maxLen)];
 }
 
 function pcmToWav(pcmData, sampleRate, numChannels, bitsPerSample) {
