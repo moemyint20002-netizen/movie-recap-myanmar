@@ -1,57 +1,33 @@
 export default async function handler(req, res) {
-    const {
-        text = 'မင်္ဂလာပါ',
-        voice = 'my-MM-ThihaNeural',
-        pitch = '+0Hz',
-        rate = '+0%'
-    } = req.query;
+    const { text = 'မင်္ဂလာပါ', lang = 'my' } = req.query;
 
-    try {
-        // Connect to Microsoft Edge Neural TTS Service (Natural Human-like Burmese Voices)
-        const trustedClientToken = '6A5AA1D4EAFF4E9FB37E23D68491D6F4';
-        const url = `https://speech.platform.bing.com/consumer/speech/synthesize/readaloud/edge/v1?TrustedClientToken=${trustedClientToken}`;
+    const endpoints = [
+        `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(text)}&tl=${encodeURIComponent(lang)}&client=tw-ob`,
+        `https://translate.googleapis.com/translate_tts?ie=UTF-8&client=gtx&tl=${encodeURIComponent(lang)}&q=${encodeURIComponent(text)}`
+    ];
 
-        // Fallback via reliable Neural TTS endpoint
-        const ssml = `<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='my-MM'>
-            <voice name='${voice}'>
-                <prosody pitch='${pitch}' rate='${rate}'>${escapeXml(text)}</prosody>
-            </voice>
-        </speak>`;
+    for (const url of endpoints) {
+        try {
+            const response = await fetch(url, {
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                    'Referer': 'https://translate.google.com/'
+                }
+            });
 
-        // Use StreamElements / Edge Neural REST Wrapper for instant serverless MP3 response
-        const apiUrl = `https://api.streamelements.com/kappa/v2/speech?voice=${encodeURIComponent(voice)}&text=${encodeURIComponent(text)}`;
-        const response = await fetch(apiUrl);
-
-        if (response.ok) {
-            const arrayBuffer = await response.arrayBuffer();
-            res.setHeader('Content-Type', 'audio/mpeg');
-            res.setHeader('Cache-Control', 'public, max-age=86400');
-            return res.send(Buffer.from(arrayBuffer));
+            if (response.ok) {
+                const arrayBuffer = await response.arrayBuffer();
+                if (arrayBuffer.byteLength > 200) {
+                    res.setHeader('Content-Type', 'audio/mpeg');
+                    res.setHeader('Access-Control-Allow-Origin', '*');
+                    res.setHeader('Cache-Control', 'public, max-age=86400');
+                    return res.status(200).send(Buffer.from(arrayBuffer));
+                }
+            }
+        } catch (err) {
+            continue;
         }
-
-        // Secondary Natural Neural Fallback
-        const langCode = voice.startsWith('th-') ? 'th' : voice.startsWith('zh-') ? 'zh-CN' : voice.startsWith('en-') ? 'en' : 'my';
-        const fallbackUrl = `https://translate.googleapis.com/translate_tts?ie=UTF-8&client=gtx&tl=${langCode}&q=${encodeURIComponent(text)}`;
-        const fbRes = await fetch(fallbackUrl, {
-            headers: { 'User-Agent': 'Mozilla/5.0' }
-        });
-
-        const fbBuffer = Buffer.from(await fbRes.arrayBuffer());
-        res.setHeader('Content-Type', 'audio/mpeg');
-        res.send(fbBuffer);
-    } catch (error) {
-        res.status(500).json({ error: 'Neural TTS Error' });
     }
-}
 
-function escapeXml(unsafe) {
-    return unsafe.replace(/[<>&'"]/g, (c) => {
-        switch (c) {
-            case '<': return '&lt;';
-            case '>': return '&gt;';
-            case '&': return '&amp;';
-            case '\'': return '&apos;';
-            case '"': return '&quot;';
-        }
-    });
+    res.status(502).json({ error: 'TTS stream unavailable' });
 }
