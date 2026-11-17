@@ -213,14 +213,9 @@
         let previewAudio = new Audio();
         let loadedVideoDuration = 0;
 
-        // Maps Thiha to Charon (Deep Burmese Male Narrator) consistently across Preview & Final Render
-        function resolveTtsParams(voiceLabel) {
-            if (voiceLabel === 'Thiha') {
-                return { apiVoice: 'Charon', pitch: '-20' };
-            }
+                function resolveTtsParams(voiceLabel) {
             return { apiVoice: voiceLabel, pitch: '0' };
         }
-
         async function pickVoice(el, name) {
             selectedVoice = name;
             const badge = document.getElementById('selectedVoiceBadge');
