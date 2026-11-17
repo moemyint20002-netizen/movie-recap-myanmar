@@ -1,32 +1,26 @@
-function generateRecap() {
+function extractData() {
     const link = document.getElementById('videoLink').value;
-    const platform = document.getElementById('platform').value;
-    const tone = document.getElementById('tone').value;
+    const srtInput = document.getElementById('srtFile').files[0];
     const loading = document.getElementById('loading');
-    const resultBox = document.getElementById('resultScript');
+    const resultBox = document.getElementById('extractResult');
 
-    if (!link) {
-        alert('ကျေးဇူးပြု၍ ဇာတ်လမ်းလင့်ခ် (သို့) အချက်အလက် ထည့်ပါ။');
+    if (!link && !srtInput) {
+        alert('ကျေးဇူးပြု၍ YouTube လင့်ခ် (သို့မဟုတ်) .srt ဖိုင် တစ်ခုခု ထည့်ပါခင်ဗျာ။');
         return;
     }
 
     loading.classList.remove('hidden');
     resultBox.value = '';
 
-    // Simulate AI Generation
+    // Simulate Extraction Process
     setTimeout(() => {
         loading.classList.add('hidden');
-        resultBox.value = `[${platform.toUpperCase()} Recap - ${tone.toUpperCase()} Tone]\n\n` +
-                          `🔥 [Hook]: ကမ္ဘာကြီးပျက်သုဉ်းခါနီးအချိန်မှာ သူရဲကောင်းတစ်ယောက် ဘယ်လိုရင်ဆိုင်မလဲဆိုတာ ကြည့်ရမယ့် အမိုက်စား ဇာတ်ကားပဲ ဖြစ်ပါတယ်။\n\n` +
-                          `ဇာတ်လမ်းအစမှာတော့ ပင်မဇာတ်ကောင်ဟာ လျှို့ဝှက်ချက်တစ်ခုကို ဖော်ထုတ်ဖို့ ကြိုးစားနေပါတယ်။ ရုတ်တရက် အတိတ်က ဖြစ်ရပ်တွေ ပြန်ပေါ်လာပြီး အားလုံးကို အံ့သြသွားစေမယ့် အလှည့်အပြောင်းတွေနဲ့ ဆက်လက် စီးမျောရမှာ ဖြစ်ပါတယ်။\n\n` +
-                          `⚡ [Cliffhanger]: ဒါပေမဲ့ နောက်ဆုံး မိနစ်မှာ ဘယ်သူမှ မထင်မှတ်ထားတဲ့ လူတစ်ယောက် ပေါ်လာပါရောလား... ဆက်လက်ကြည့်ရှုကြပါဦးခင်ဗျာ။`;
+        let sourceName = srtInput ? srtInput.name : link;
+        resultBox.value = `[SUCCESS] ဇာတ်လမ်းအချက်အလက် ထုတ်ယူပြီးပါပြီ!\n` +
+                          `📂 Source: ${sourceName}\n\n` +
+                          `⏱️ [00:00 - 01:30] ဇာတ်လမ်း အစပိုင်း မိတ်ဆက်နှင့် ဇာတ်ကောင်ပေါ်လာခြင်း။\n` +
+                          `⏱️ [01:31 - 05:00] ပင်မပြဿနာ စတင်ပေါ်ပေါက်လာပြီး လျှို့ဝှက်ချက်ကို ရှာဖွေခြင်း။\n` +
+                          `⏱️ [05:01 - 10:00] အလှည့်အပြောင်းနှင့် အထွတ်အထိပ် (Climax) အပိုင်း။\n\n` +
+                          `👉 ဆက်လက်၍ ဒုတိယအဆင့် (AI Script ရေးသားခြင်း) သို့ သွားရောက်နိုင်ပါပြီ။`;
     }, 2000);
-}
-
-function playTTS() {
-    alert('AI Text-to-Speech (မြန်မာအသံဖိုင်) ကို အောင်မြင်စွာ ဖန်တီးပြီးပါပြီ!');
-}
-
-function exportCapCut() {
-    alert('CapCut သို့ တိုက်ရိုက်ထုတ်ယူနိုင်ရန် Project ဖိုင်ကို ပြင်ဆင်နေပါပြီ...');
 }
