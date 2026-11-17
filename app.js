@@ -1,42 +1,61 @@
-function runFullAutomation() {
-    const link = document.getElementById('videoLink').value;
-    const platform = document.getElementById('platformPreset').value;
-    const tone = document.getElementById('toneSelector').value;
-    const glossary = document.getElementById('charGlossary').value || 'သတ်မှတ်ထားခြင်းမရှိ';
-    const loading = document.getElementById('loading');
-    const outputBox = document.getElementById('finalOutput');
+let selectedVoice = 'Thiha';
+let selectedLang = 'Myanmar';
 
-    if (!link) {
-        alert('ကျေးဇူးပြု၍ YouTube (သို့) TikTok လင့်ခ် အရင်ထည့်ပါ။');
+function setLang(lang) {
+    selectedLang = lang;
+    ['Myanmar', 'English', 'Thai', 'Chinese'].forEach(l => {
+        const btn = document.getElementById('lang' + l);
+        if (l === lang) {
+            btn.className = "px-4 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-semibold";
+        } else {
+            btn.className = "px-4 py-1.5 rounded-lg bg-gray-800 text-gray-300 text-xs font-semibold hover:bg-gray-700";
+        }
+    });
+}
+
+function selectVoice(element, voiceName) {
+    selectedVoice = voiceName;
+    document.querySelectorAll('.voice-btn').forEach(b => {
+        b.className = "voice-btn bg-gray-950 border border-gray-800 p-2.5 rounded-xl text-center hover:border-gray-600 transition";
+        b.querySelector('p:last-child').className = "text-[10px] text-gray-400";
+    });
+    element.className = "voice-btn bg-blue-600/20 border border-blue-500 p-2.5 rounded-xl text-center transition";
+    element.querySelector('p:last-child').className = "text-[10px] text-blue-400";
+}
+
+function startFullStudio() {
+    const fileInput = document.getElementById('movieFile').files[0];
+    if (!fileInput) {
+        alert('ကျေးဇူးပြု၍ ပထမဆုံး Movie Video ဖိုင်ကို အရင် Upload တင်ပေးပါခင်ဗျာ။');
         return;
     }
 
-    loading.classList.remove('hidden');
-    outputBox.value = '';
+    // Reset status
+    for (let i = 2; i <= 6; i++) {
+        const span = document.getElementById(`status${i}`);
+        span.className = "text-xs bg-yellow-600/20 text-yellow-400 px-3 py-1 rounded-full animate-pulse";
+        span.innerText = "Processing...";
+    }
+    document.getElementById('exportCard').classList.add('hidden');
 
+    // Step-by-step Simulation with selected Voice
+    setTimeout(() => { updateStatus(2, "Completed"); }, 1500);
+    setTimeout(() => { updateStatus(3, "Completed"); }, 3000);
+    setTimeout(() => { updateStatus(4, `Done (${selectedVoice})`); }, 4500);
+    setTimeout(() => { updateStatus(5, "Completed"); }, 6000);
     setTimeout(() => {
-        loading.classList.add('hidden');
-        outputBox.value = `[SUCCESS] Movie Recap Myanmar - အစအဆုံး အောင်မြင်စွာ ဖန်တီးပြီးပါပြီ!\n\n` +
-                          `📊 [System Config]:\n` +
-                          `- Platform: ${platform.toUpperCase()}\n` +
-                          `- Tone: ${tone.toUpperCase()}\n` +
-                          `- Character Glossary: ${glossary}\n\n` +
-                          `🔥 [Hook & Introduction]:\n"ဒီဇာတ်ကားရဲ့ အမိုက်စား လျှို့ဝှက်ချက်ကို သိရဖို့ ဆက်ကြည့်လိုက်ကြရအောင်..."\n\n` +
-                          `📖 [Generated Script & Scene Matching]:\n` +
-                          `1. [00:00 - 01:30] ဇာတ်ကောင် မိတ်ဆက်နှင့် အစပျိုးမှု။\n` +
-                          `2. [01:31 - 06:00] အဓိက ပဋိပက္ခနှင့် အလှည့်အပြောင်းများ။\n` +
-                          `3. [06:01 - 10:00] အထွတ်အထိပ်ရောက်ချိန် (Climax) နှင့် အဆုံးသတ် Cliffhanger။\n\n` +
-                          `🛡️ [Copyright Protection & Audio]:\n` +
-                          `- Auto Zoom, Mirror & Color Filter applied.\n` +
-                          `- Burmese AI Voiceover (TTS) & .srt subtitles generated successfully!\n` +
-                          `👉 အဆင်သင့်ဖြစ်ပါပြီ၊ CapCut သို့ တိုက်ရိုက် ပို့ဆောင်နိုင်ပါပြီ။`;
-    }, 2500);
+        updateStatus(6, "Completed");
+        document.getElementById('exportCard').classList.remove('hidden');
+        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    }, 7500);
 }
 
-function generateTTS() {
-    alert('မြန်မာအသံဖိုင် (TTS) နှင့် စာတန်းထိုး (.srt) ဖိုင်တို့ကို အောင်မြင်စွာ ထုတ်ယူပြီးပါပြီ!');
+function updateStatus(step, text) {
+    const span = document.getElementById(`status${step}`);
+    span.className = "text-xs bg-green-600/20 text-green-400 px-3 py-1 rounded-full font-semibold";
+    span.innerHTML = `<i class="fa-solid fa-check mr-1"></i> ${text}`;
 }
 
-function exportCapCut() {
-    alert('CapCut သို့ တိုက်ရိုက် ပို့ဆောင်နိုင်ရန် Project ဖိုင်ကို ပြင်ဆင်နေပါပြီ...');
+function downloadVideo() {
+    alert('ဗီဒီယိုဖိုင်ကို Download ဆွဲယူနေပါပြီ...');
 }
