@@ -236,15 +236,15 @@
 
   <script>
     const VOICES = [
-      { name: 'Thiha', style: 'Burmese · ready', available: true },
-      { name: 'Puck', style: 'Upbeat · English studio', available: false },
-      { name: 'Charon', style: 'Informative · English studio', available: false },
-      { name: 'Fenrir', style: 'Excitable · English studio', available: false },
-      { name: 'Aoede', style: 'Breezy · English studio', available: false },
-      { name: 'Kore', style: 'Firm · English studio', available: false },
-      { name: 'Leda', style: 'Youthful · English studio', available: false }
+      { name: 'Thiha', style: 'Burmese · unavailable', available: false },
+      { name: 'Puck', style: 'Gemini · upbeat', available: true },
+      { name: 'Charon', style: 'Gemini · informative', available: true },
+      { name: 'Fenrir', style: 'Gemini · excitable', available: true },
+      { name: 'Aoede', style: 'Gemini · breezy', available: true },
+      { name: 'Kore', style: 'Gemini · firm', available: true },
+      { name: 'Leda', style: 'Gemini · youthful', available: true }
     ];
-    const state = { selectedVoice: 'Thiha', maskMode: 'auto', duration: 0, videoFile: null, audioBlob: null, finalBlob: null, finalExt: 'mp4', script: '', hooks: [], scenes: [], musicFile: null, sfxFile: null, tracks: { voice: true, music: false, sfx: false, lipsync: true } };
+    const state = { selectedVoice: 'Puck', maskMode: 'auto', duration: 0, videoFile: null, audioBlob: null, finalBlob: null, finalExt: 'mp4', script: '', hooks: [], scenes: [], musicFile: null, sfxFile: null, tracks: { voice: true, music: false, sfx: false, lipsync: true } };
     const $ = (id) => document.getElementById(id);
     const sourceVideo = $('sourceVideo');
     const previewAudio = $('audioPreview');
@@ -257,7 +257,7 @@
     function escapeHtml(value) { return String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[c])); }
 
     function renderVoices() { $('voiceGrid').innerHTML = VOICES.map((voice) => `<button class="voice-card ${voice.name === state.selectedVoice ? 'selected' : ''} ${voice.available ? '' : 'locked'}" data-voice="${voice.name}"><span class="voice-name">${voice.name}</span><span class="voice-style">${voice.style}</span><span class="voice-status ${voice.available ? '' : 'lock'}"><i></i>${voice.available ? 'Provider ready' : 'Unavailable'}</span></button>`).join(''); document.querySelectorAll('[data-voice]').forEach((btn) => btn.addEventListener('click', () => selectVoice(btn.dataset.voice))); }
-    function selectVoice(name) { state.selectedVoice = name; renderVoices(); $('selectedVoiceLabel').textContent = `${name} selected`; if (!VOICES.find((v) => v.name === name)?.available) { const message = `${name} is not available in the current Burmese TTS provider. No fallback mapping was applied.`; $('voiceFeedback').textContent = message; $('voiceFeedback').className = 'voice-feedback error'; showToast(message, 'error'); return; } $('voiceFeedback').textContent = 'Thiha is the current Burmese provider voice. Preview uses the same server-side voice selected for rendering.'; $('voiceFeedback').className = 'voice-feedback'; }
+    function selectVoice(name) { state.selectedVoice = name; renderVoices(); $('selectedVoiceLabel').textContent = `${name} selected`; if (!VOICES.find((v) => v.name === name)?.available) { const message = `${name} is not available in the current Gemini TTS provider. No fallback mapping was applied.`; $('voiceFeedback').textContent = message; $('voiceFeedback').className = 'voice-feedback error'; showToast(message, 'error'); return; } $('voiceFeedback').textContent = `${name} is provider-supported. Burmese text is sent to the server-side Gemini TTS handler for preview and render.`; $('voiceFeedback').className = 'voice-feedback'; }
 
     async function previewVoice() { const voice = state.selectedVoice; const text = ($('scriptOutput').value.trim().split(/[။.!?\n]/).find(Boolean) || 'မင်္ဂလာပါ၊ RECAST မှာ ဇာတ်လမ်းအကျဉ်းကို အခုပဲ စတင်လိုက်ကြရအောင်။').trim(); $('previewVoiceBtn').disabled = true; $('voiceFeedback').textContent = `Checking ${voice} with the live provider...`; $('voiceFeedback').className = 'voice-feedback'; try { const res = await fetch(`/api/tts?voice=${encodeURIComponent(voice)}&pitch=${encodeURIComponent($('pitchRange').value)}&text=${encodeURIComponent(text)}`); if (!res.ok) { const data = await res.json().catch(() => ({})); throw new Error(data.error || 'TTS provider request failed'); } const blob = await res.blob(); state.audioBlob = blob; previewAudio.src = URL.createObjectURL(blob); $('voiceFeedback').textContent = `${voice} preview ready · ${res.headers.get('X-TTS-Engine') || 'server-side TTS'} · same voice locked for render`; $('voiceFeedback').className = 'voice-feedback success'; $('voiceTrackLabel').textContent = `${voice} · preview ready`; setProgress('voice'); await previewAudio.play().catch(() => {}); updateQc(); } catch (error) { $('voiceFeedback').textContent = error.message; $('voiceFeedback').className = 'voice-feedback error'; showToast(error.message, 'error'); } finally { $('previewVoiceBtn').disabled = false; } }
 
