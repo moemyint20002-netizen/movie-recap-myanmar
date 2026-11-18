@@ -172,7 +172,8 @@ async function handler(req, res) {
   } catch (error) {
     const detail = error instanceof Error ? error.message : 'Unknown TTS error';
     console.error('[RECAST TTS]', detail);
-    return json(res, 502, { error: 'Voice generation failed', detail, voice });
+    const quota = /quota|rate.?limit|free.?tier|too many requests/i.test(detail);
+    return json(res, quota ? 429 : 502, { error: quota ? 'Gemini TTS quota is temporarily exhausted' : 'Voice generation failed', detail, voice, retryable: quota });
   }
 }
 
