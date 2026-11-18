@@ -9,8 +9,8 @@ const VOICES = Object.freeze({
 });
 
 const DEFAULT_VOICE = 'Puck';
-const MAX_TEXT_LENGTH = 4000;
-const MAX_BODY_BYTES = 16000;
+const MAX_TEXT_LENGTH = 12000;
+const MAX_BODY_BYTES = 40000;
 const MIN_AUDIO_BYTES = 500;
 const DEFAULT_TTS_MODEL = 'gemini-2.5-flash-preview-tts';
 
@@ -93,12 +93,13 @@ async function synthesizeGemini(text, voice, pitch) {
   if (!apiKey) throw new Error('TTS service is not configured: GEMINI_API_KEY is missing');
   const model = process.env.GEMINI_TTS_MODEL || DEFAULT_TTS_MODEL;
   const config = VOICES[voice];
-  const prompt = `${text}${pitchInstruction(pitch)}`;
+  const prompt = text;
   const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      contents: [{ parts: [{ text: prompt }] }],
+      systemInstruction: { parts: [{ text: `You are a Burmese narration voice. Read the user text exactly as written in natural spoken Burmese. Do not translate it, summarize it, explain it, add a greeting, or speak any instruction. Preserve Burmese words, punctuation, and scene order.${pitchInstruction(pitch)}` }] },
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
       generationConfig: {
         responseModalities: ['AUDIO'],
         speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: config.id } } }
